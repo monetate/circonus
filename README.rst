@@ -50,6 +50,7 @@ Get a resource
 The current ``user``:
 
 .. code-block:: python
+
     r = client.get("user/current")
     print r.json()
 
@@ -62,6 +63,36 @@ The current ``user``:
      u'email': u'user@example.com',
      u'firstname': u'You',
      u'lastname': u'Sir'}
+
+A specific ``graph``:
+
+.. code-block:: python
+
+    r = client.get("graph/6c53484e-b0ad-4652-8b4b-6645fae0db7b")
+    print r.json()
+
+⏎
+
+.. code-block:: python
+
+    {u'_cid': u'/graph/6c53484e-b0ad-4652-8b4b-6645fae0db7b',
+     u'access_keys': [],
+     u'composites': [],
+     u'datapoints': [...],
+     u'description': u'',
+     u'guides': [],
+     u'line_style': u'stepped',
+     u'logarithmic_left_y': None,
+     u'logarithmic_right_y': None,
+     u'max_left_y': None,
+     u'max_right_y': None,
+     u'metric_clusters': [],
+     u'min_left_y': u'0',
+     u'min_right_y': u'0',
+     u'notes': None,
+     u'style': u'area',
+     u'tags': [],
+     u'title': u'Disk usage'}
 
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
