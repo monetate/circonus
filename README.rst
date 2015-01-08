@@ -3,5 +3,5 @@ Circonus
 
 A Python module for interacting with the `Circonus_` `REST API_`.
 
-.. `Circonus`: http://www.circonus.com/
-.. `REST API`: https://login.circonus.com/resources/api
+.. _`Circonus`: http://www.circonus.com/
+.. _`REST API`: https://login.circonus.com/resources/api
