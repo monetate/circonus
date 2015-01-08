@@ -47,7 +47,7 @@ made via ``client``:
 Get a resource
 --------------
 
-The current ``user``:
+The current `user`_:
 
 .. code-block:: python
 
@@ -64,7 +64,7 @@ The current ``user``:
      u'firstname': u'You',
      u'lastname': u'Sir'}
 
-A specific ``graph``:
+A specific `graph`_:
 
 .. code-block:: python
 
@@ -100,3 +100,5 @@ A specific ``graph``:
 .. _requests: http://docs.python-requests.org/en/latest/index.html
 .. _Error: https://login.circonus.com/resources/api#errors
 .. _custom Circonus HTTP request headers: https://login.circonus.com/resources/api#authentication
+.. _user: https://login.circonus.com/resources/api/calls/user
+.. _graph: https://login.circonus.com/resources/api/calls/graph
