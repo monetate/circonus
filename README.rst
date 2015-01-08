@@ -6,8 +6,12 @@ A Python module for interacting with the `Circonus`_ `REST API`_.
 Features
 ========
 
-* Easy resource `tagging`_
-* Built on the excellent `requests`_ library
+The ``circonus`` package is built on the excellent `requests`_
+library.  It extends or improves the standard Circonus REST API by
+providing several conveniences and features.
+
+* Application name and token handling
+* Resource `tagging`_
 * HTTP error logging
 
 .. _Circonus: http://www.circonus.com/
