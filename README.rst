@@ -20,17 +20,29 @@ Usage
 First, setup the ``CirconusClient``.  Authentication is performed via
 `custom Circonus HTTP request headers`_.
 
-===================== ============================
-Circonus HTTP header  ``CirconusClient`` parameter
-===================== ============================
-X-Circonus-App-Name   CIRCONUS_API_APP_NAME
-X-Circonus-Auth-Token CIRCONUS_APP_TOKEN
-===================== ============================
-
 .. code-block:: python
 
     from circonus import CirconusClient
+
+
+    CIRCONUS_API_APP_NAME = "my-circonus-app"
+    CIRCONUS_APP_TOKEN = "generated-in-circonus-ui"
     client = CirconusClient(CIRCONUS_API_APP_NAME, CIRCONUS_APP_TOKEN)
+
+This will set the HTTP request headers for all subsequent requests
+made via ``client``:
+
+.. code-block:: python
+
+    client.api_headers
+
+⏎
+
+.. code-block:: python
+
+    {'Accept': 'application/json',
+    'X-Circonus-App-Name': 'my-circonus-app',
+    'X-Circonus-Auth-Token': 'generated-in-circonus-ui'}
 
 Get a resource
 --------------
@@ -39,7 +51,7 @@ Get a resource
     r = client.get("user/current")
     r.json()
 
-:arrow_right_hook:
+⏎
 
 .. code-block:: python
 
