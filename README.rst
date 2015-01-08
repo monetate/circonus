@@ -34,7 +34,7 @@ made via ``client``:
 
 .. code-block:: python
 
-    client.api_headers
+    print client.api_headers
 
 ⏎
 
@@ -46,6 +46,8 @@ made via ``client``:
 
 Get a resource
 --------------
+
+The current ``user``:
 
 .. code-block:: python
     r = client.get("user/current")
