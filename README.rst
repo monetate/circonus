@@ -53,6 +53,10 @@ The current ``user``:
     r = client.get("user/current")
     r.json()
 
+.. code-block:: python
+    r = client.get("user/current")
+    r.json()
+
 ⏎
 
 .. code-block:: python
