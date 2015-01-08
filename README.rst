@@ -31,7 +31,7 @@ Usage
     r = client.get("user/current")
     r.json()
 
-Should return::
+Should return:
 
 .. code-block:: javascript
 
