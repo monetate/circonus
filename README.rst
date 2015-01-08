@@ -12,12 +12,7 @@ providing several conveniences and features.
 
 * Application name and token handling
 * Resource `tagging`_
-* HTTP error logging
-
-.. _Circonus: http://www.circonus.com/
-.. _REST API: https://login.circonus.com/resources/api
-.. _tagging: https://login.circonus.com/resources/api/calls/tag
-.. _requests: http://docs.python-requests.org/en/latest/index.html
+* `Error`_ logging
 
 Usage
 =====
@@ -40,3 +35,9 @@ Should return:
      u'email': u'user@example.com',
      u'firstname': u'You',
      u'lastname': u'Sir'}
+
+.. _Circonus: http://www.circonus.com/
+.. _REST API: https://login.circonus.com/resources/api
+.. _tagging: https://login.circonus.com/resources/api/calls/tag
+.. _requests: http://docs.python-requests.org/en/latest/index.html
+.. _Error: https://login.circonus.com/resources/api#errors
