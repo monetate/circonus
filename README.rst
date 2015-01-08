@@ -18,3 +18,25 @@ providing several conveniences and features.
 .. _REST API: https://login.circonus.com/resources/api
 .. _tagging: https://login.circonus.com/resources/api/calls/tag
 .. _requests: http://docs.python-requests.org/en/latest/index.html
+
+Usage
+=====
+
+.. code-block:: python
+
+    from circonus import CirconusClient
+
+
+    client = CirconusClient(CIRCONUS_API_APP_NAME, CIRCONUS_APP_TOKEN)
+    r = client.get("user/current")
+    r.json()
+
+Should return::
+
+.. code-block:: javascript
+
+    {u'_cid': u'/user/1234',
+     u'contact_info': {u'sms': u'', u'xmpp': u''},
+     u'email': u'user@example.com',
+     u'firstname': u'You',
+     u'lastname': u'Sir'}
