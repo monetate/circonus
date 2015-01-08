@@ -33,7 +33,7 @@ Usage
 
 Should return:
 
-.. code-block:: javascript
+.. code-block:: python
 
     {u'_cid': u'/user/1234',
      u'contact_info': {u'sms': u'', u'xmpp': u''},
