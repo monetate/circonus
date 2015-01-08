@@ -3,6 +3,10 @@ Circonus
 
 A Python module for interacting with the `Circonus`_ `REST API`_.
 
+.. image:: https://api.travis-ci.org/monetate/circonus.png?branch=master
+   :target: https://travis-ci.org/monetate/circonus
+   :alt: Travis CI build status
+
 Features
 ========
 
