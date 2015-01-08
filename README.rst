@@ -115,7 +115,37 @@ A specific `graph`_:
      u'notes': None,
      u'style': u'area',
      u'tags': [],
-     u'title': u'Disk usage'}
+     u'title': u'cpu usage'}
+
+Graphs `filtered`_ by ``title``:
+
+.. code-block:: python
+
+    r = client.get("graph", {"f_title_wildcard": "*cpu*"})
+    print r.json()
+
+⏎
+
+.. code-block:: python
+
+    [{u'_cid': u'/graph/6c53484e-b0ad-4652-8b4b-6645fae0db7b',
+     u'access_keys': [],
+     u'composites': [],
+     u'datapoints': […],
+     u'description': u'',
+     u'guides': [],
+     u'line_style': u'stepped',
+     u'logarithmic_left_y': None,
+     u'logarithmic_right_y': None,
+     u'max_left_y': None,
+     u'max_right_y': None,
+     u'metric_clusters': [],
+     u'min_left_y': u'0',
+     u'min_right_y': u'0',
+     u'notes': None,
+     u'style': u'area',
+     u'tags': [],
+     u'title': u'cpu usage'}]
 
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
@@ -125,3 +155,4 @@ A specific `graph`_:
 .. _custom Circonus HTTP request headers: https://login.circonus.com/resources/api#authentication
 .. _user: https://login.circonus.com/resources/api/calls/user
 .. _graph: https://login.circonus.com/resources/api/calls/graph
+.. _filtered: https://login.circonus.com/resources/api#filtering
