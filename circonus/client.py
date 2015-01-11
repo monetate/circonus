@@ -1,5 +1,6 @@
 """Interact with the Circonus REST API."""
 
+from datetime import datetime
 from functools import wraps
 from posixpath import sep as pathsep
 from urlparse import SplitResult, urlunsplit
@@ -7,6 +8,7 @@ from urlparse import SplitResult, urlunsplit
 import logging
 import json
 
+from circonus.annotation import Annotation
 from circonus.tag import with_common_tags
 from requests.exceptions import HTTPError
 
@@ -92,3 +94,25 @@ class CirconusClient(object):
 
         """
         return requests.post(get_api_url(resource_type), data=json.dumps(data), headers=self.api_headers)
+
+    def annotation(self, title, category, description="", rel_metrics=None):
+        """Context manager and decorator for creating annotations."""
+        return Annotation(self, title, category, description, rel_metrics)
+
+    def create_annotation(self, title, category, start=None, stop=None, description="", rel_metrics=None):
+        """Create an annotation.
+
+        start and stop, if given, should be datetime instances.  start defaults to now.  stop defaults to start.
+
+        Note: Sub-second annotation resolution is not supported by Circonus.
+
+        rel_metrics should be a list of related metrics.
+
+        The requests response is returned.
+
+        """
+        a = Annotation(self, title, category, description, rel_metrics)
+        a.start = datetime.utcnow() if start is None else start
+        a.stop = a.start if stop is None else stop
+        a.create()
+        return a.response

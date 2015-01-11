@@ -103,7 +103,7 @@ def with_common_tags(f):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        cid, data = args
+        _, cid, data = args
         if get_resource_from_cid(cid) in TAGGABLE_RESOURCES:
             common_tags = COMMON_TAGS
             if "type" in data:

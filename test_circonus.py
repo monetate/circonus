@@ -7,8 +7,9 @@ from uuid import uuid4
 import unittest
 
 from circonus import CirconusClient, tag, util
+from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-
+from requests.exceptions import HTTPError
 
 class CirconusClientTestCase(unittest.TestCase):
 
@@ -33,6 +34,36 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("path/to/resource/"))
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
+
+    def test_create_annotation(self):
+        with self.assertRaises(HTTPError):
+            a = self.c.create_annotation("title", "category")
+            self.assertEqual("title", a.title)
+            self.assertEqual("category", a.category)
+            self.assertEqual("", a.description)
+            self.assertEqual([], a.rel_metrics)
+            self.assertIsNone(a.start)
+            self.assertIsNone(a.stop)
+            self.assertIsNone(a.response)
+
+
+class AnnotationTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api_app_name = "TEST"
+        cls.api_token = str(uuid4())
+        cls.c = CirconusClient(cls.api_app_name, cls.api_token)
+
+    def test_create(self):
+        a = Annotation(self.c, "title", "category")
+        self.assertEqual("title", a.title)
+        self.assertEqual("category", a.category)
+        self.assertEqual("", a.description)
+        self.assertEqual([], a.rel_metrics)
+        self.assertIsNone(a.start)
+        self.assertIsNone(a.stop)
+        self.assertIsNone(a.response)
 
 
 class UtilTestCase(unittest.TestCase):
