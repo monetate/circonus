@@ -170,8 +170,8 @@ object rather than a ``requests`` response object.  The response
 object is available at the ``response`` attribute on the return
 object.
 
-The second way to create an annotation is with the decorator or
-context manager:
+The second way to create an annotation is with a decorator or context
+manager:
 
 .. code-block:: python
 
@@ -179,10 +179,13 @@ context manager:
     def a_function_or_method():
         sleep(10)
 
-This will create an annotation with the given parameters and ``start``
-and ``stop`` times that are automatically set to the UTC values of the
-``__enter__`` and ``__exit__`` magic functions for the decorated
-function.
+    with client.annotation("title", "category"):
+        sleep(10)
+
+These examples will create annotations with the given parameters and
+``start`` and ``stop`` times that are automatically set to the UTC
+values of the ``__enter__`` and ``__exit__`` magic functions for the
+decorated function and context manager, respectively.
 
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
