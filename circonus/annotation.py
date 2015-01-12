@@ -1,9 +1,8 @@
 """Interact with the Circonus annotation API."""
 
+from calendar import timegm
 from datetime import datetime
 from functools import wraps
-
-import time
 
 
 class Annotation(object):
@@ -14,7 +13,7 @@ class Annotation(object):
     @staticmethod
     def datetime_to_int(dt):
         """Convert the given datetime object into an integer."""
-        return int(time.mktime(dt.timetuple()))
+        return int(timegm(dt.timetuple()))
 
     def __init__(self, client, title, category, description="", rel_metrics=None):
         self.client = client
