@@ -155,6 +155,35 @@ Graphs `filtered`_ by ``title``:
      u'tags': [],
      u'title': u'cpu usage'}]
 
+Annotation
+----------
+
+An `annotation`_ can be created in one of two ways.  The first is
+explicitly via the ``create_annotation`` method:
+
+.. code-block:: python
+
+    annotation = r.create_annotation("title", "category")
+
+Note that the ``create_annotation`` method returns an ``Annotation``
+object rather than a ``requests`` response object.  The response
+object is available at the ``response`` attribute on the return
+object.
+
+The second way to create an annotation is with the decorator or
+context manager:
+
+.. code-block:: python
+
+    @client.annotation("title", "category")
+    def a_function_or_method():
+        sleep(10)
+
+This will create an annotation with the given parameters and ``start``
+and ``stop`` times that are automatically set to the UTC values of the
+``__enter__`` and ``__exit__`` magic functions for the decorated
+function.
+
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
 .. _tagging: https://login.circonus.com/resources/api/calls/tag
@@ -164,3 +193,4 @@ Graphs `filtered`_ by ``title``:
 .. _user: https://login.circonus.com/resources/api/calls/user
 .. _graph: https://login.circonus.com/resources/api/calls/graph
 .. _filtered: https://login.circonus.com/resources/api#filtering
+.. _annotation: https://login.circonus.com/resources/api/calls/annotation
