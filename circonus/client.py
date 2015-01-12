@@ -108,7 +108,7 @@ class CirconusClient(object):
 
         rel_metrics should be a list of related metrics.
 
-        The requests response is returned.
+        The annotation object is returned.  The requests response attached to that object as the response attribute.
 
         """
         a = Annotation(self, title, category, description, rel_metrics)
