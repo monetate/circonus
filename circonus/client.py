@@ -115,4 +115,4 @@ class CirconusClient(object):
         a.start = datetime.utcnow() if start is None else start
         a.stop = a.start if stop is None else stop
         a.create()
-        return a.response
+        return a
