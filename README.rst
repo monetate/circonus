@@ -176,7 +176,7 @@ manager:
 .. code-block:: python
 
     @client.annotation("title", "category")
-    def a_function_or_method():
+    def nap_time():
         sleep(10)
 
     with client.annotation("title", "category"):
