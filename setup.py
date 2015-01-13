@@ -2,13 +2,19 @@
 
 from setuptools import find_packages, setup
 
+import codecs
+
 import circonus
 
+
+with codecs.open("HISTORY.rst", "r", "utf-8") as f:
+    history = f.read()
 
 setup(
     name="circonus",
     version=circonus.__version__,
     description="Interact with the Circonus REST API.",
+    long_description=history,
     author="Monetate Inc.",
     author_email="kmolendyke@monetate.com",
     url="https://github.com/monetate/circonus",
