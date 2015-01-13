@@ -121,6 +121,17 @@ class AnnotationTestCase(unittest.TestCase):
             self.assertGreaterEqual(a.stop - a.start, timedelta(seconds=0.1))
             self.assertLess(a.stop - a.start, timedelta(seconds=0.2))
 
+    def test_context_manager(self):
+        a = Annotation(self.c, "title", "category")
+
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            with a:
+                self.assertIsNotNone(a.start)
+                self.assertIsNone(a.stop)
+            self.assertIsNotNone(a.stop)
+            create_patch.assert_called()
+
 
 class UtilTestCase(unittest.TestCase):
 
