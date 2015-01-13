@@ -158,8 +158,8 @@ Graphs `filtered`_ by ``title``:
 Annotation
 ----------
 
-An `annotation`_ can be created in one of two ways.  The first is
-explicitly via the ``create_annotation`` method:
+An `annotation`_ can be created in two ways.  The first is explicitly
+via the ``create_annotation`` method:
 
 .. code-block:: python
 
