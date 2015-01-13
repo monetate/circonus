@@ -2,13 +2,17 @@
 
 # pylint: disable=W0212
 
+from datetime import datetime, timedelta
+from time import sleep
 from uuid import uuid4
 
 import unittest
 
 from circonus import CirconusClient, tag, util
+from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-
+from mock import patch, MagicMock
+from requests.exceptions import HTTPError
 
 class CirconusClientTestCase(unittest.TestCase):
 
@@ -33,6 +37,89 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("path/to/resource/"))
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
+
+    def test_create_annotation(self):
+        with self.assertRaises(HTTPError):
+            self.c.create_annotation("title", "category")
+
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            a = self.c.create_annotation("title", "category")
+            self.assertEqual("title", a.title)
+            self.assertEqual("category", a.category)
+            self.assertEqual("", a.description)
+            self.assertEqual([], a.rel_metrics)
+            self.assertEqual(a.start, a.stop)
+
+            start = datetime.utcnow()
+            a = self.c.create_annotation("title", "category", start)
+            self.assertEqual("title", a.title)
+            self.assertEqual("category", a.category)
+            self.assertEqual("", a.description)
+            self.assertEqual([], a.rel_metrics)
+            self.assertEqual(start, a.start)
+            self.assertEqual(a.start, a.stop)
+
+            stop = start + timedelta(seconds=1)
+            a = self.c.create_annotation("title", "category", start, stop)
+            self.assertEqual("title", a.title)
+            self.assertEqual("category", a.category)
+            self.assertEqual("", a.description)
+            self.assertEqual([], a.rel_metrics)
+            self.assertEqual(start, a.start)
+            self.assertEqual(stop, a.stop)
+
+
+class AnnotationTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api_app_name = "TEST"
+        cls.api_token = str(uuid4())
+        cls.c = CirconusClient(cls.api_app_name, cls.api_token)
+
+    def test_create(self):
+        a = Annotation(self.c, "title", "category")
+        self.assertEqual("title", a.title)
+        self.assertEqual("category", a.category)
+        self.assertEqual("", a.description)
+        self.assertEqual([], a.rel_metrics)
+        self.assertIsNone(a.start)
+        self.assertIsNone(a.stop)
+        self.assertIsNone(a.response)
+
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            a.start = datetime.utcnow()
+            a.stop = a.start + timedelta(seconds=1)
+            expected_data = {
+                "title": a.title,
+                "category": a.category,
+                "start": a.datetime_to_int(a.start),
+                "stop": a.datetime_to_int(a.stop),
+                "description": a.description,
+                "rel_metrics": a.rel_metrics
+            }
+            a.create()
+            create_patch.assert_called_with(Annotation.RESOURCE_PATH, expected_data)
+
+
+    def test_decorator(self):
+        a = Annotation(self.c, "title", "category")
+
+        @a
+        def short_nap():
+            """Sleep for a little while."""
+            sleep(0.1)
+
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            short_nap()
+            self.assertIsNotNone(a.start)
+            self.assertIsNotNone(a.stop)
+            self.assertTrue(a.start < a.stop)
+            self.assertGreaterEqual(a.stop - a.start, timedelta(seconds=0.1))
+            self.assertLess(a.stop - a.start, timedelta(seconds=0.2))
 
 
 class UtilTestCase(unittest.TestCase):
