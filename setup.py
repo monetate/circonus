@@ -5,8 +5,6 @@ from setuptools import find_packages, setup
 import circonus
 
 
-packages = ["circonus"]
-
 setup(
     name="circonus",
     version=circonus.__version__,
