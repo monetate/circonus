@@ -75,9 +75,17 @@ class CirconusClientTestCase(unittest.TestCase):
             cid = "/user"
             self.c.get(cid)
             get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
+
             params = {"f_email": "test@example.com"}
             self.c.get(cid, params)
             get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=params)
+
+    def test_delete(self):
+        with patch("circonus.client.requests.delete") as delete_patch:
+            delete_patch.return_value = MagicMock()
+            cid = "/user/12345"
+            self.c.delete(cid)
+            delete_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
 
 
 class AnnotationTestCase(unittest.TestCase):
