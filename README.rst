@@ -163,7 +163,7 @@ via the ``create_annotation`` method:
 
 .. code-block:: python
 
-    annotation = r.create_annotation("title", "category")
+    annotation = client.create_annotation("title", "category")
 
 Note that the ``create_annotation`` method returns an ``Annotation``
 object rather than a ``requests`` response object.  The response
