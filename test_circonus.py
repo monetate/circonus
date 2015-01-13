@@ -153,6 +153,13 @@ class TagTestCase(unittest.TestCase):
         expected = t
         self.assertEqual(expected, tag._get_tag_string(t))
 
+    def test_get_telemetry_tag(self):
+        t = "collectd"
+        c = "telemetry"
+        cb = {"type": t}
+        expected = c + tag.TAG_SEP + t
+        self.assertEqual(expected, tag._get_telemetry_tag(cb))
+
     def test_get_updated_tags(self):
         existing_tags = ["environment:development", "region:us-east-1"]
         new_tags = ["cat:tag"]
