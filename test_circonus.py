@@ -145,6 +145,14 @@ class UtilTestCase(unittest.TestCase):
 
 class TagTestCase(unittest.TestCase):
 
+    def test_get_tag_string(self):
+        t = "tag"
+        c = "category"
+        expected = c + tag.TAG_SEP + t
+        self.assertEqual(expected, tag._get_tag_string(t, c))
+        expected = t
+        self.assertEqual(expected, tag._get_tag_string(t))
+
     def test_get_updated_tags(self):
         existing_tags = ["environment:development", "region:us-east-1"]
         new_tags = ["cat:tag"]
