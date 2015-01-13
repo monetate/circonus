@@ -267,6 +267,36 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, []))
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
 
+    def test_with_common_tags(self):
+        self.assertEqual([], tag.COMMON_TAGS)
+
+        @tag.with_common_tags
+        def noop(_, cid, data):
+            pass
+
+        cid = "/check_bundle/12345"
+        data = {}
+        noop(None, cid, data)
+        expected = {"tags": []}
+        self.assertEqual(expected, data)
+
+        common_tags = ["category:tag", "global"]
+        tag.COMMON_TAGS = common_tags
+        noop(None, cid, data)
+        self.assertItemsEqual(common_tags, tag.COMMON_TAGS)
+        expected = common_tags
+        self.assertItemsEqual(expected, data["tags"])
+
+        data["tags"].append("new:another")
+        noop(None, cid, data)
+        expected = ["category:tag", "global", "new:another"]
+        self.assertItemsEqual(expected, data["tags"])
+
+        data["type"] = "collectd"
+        noop(None, cid, data)
+        expected = ["category:tag", "global", "new:another", "telemetry:collectd"]
+        self.assertItemsEqual(expected, data["tags"])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
