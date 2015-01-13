@@ -3,7 +3,7 @@ Circonus
 
 A Python module for interacting with the `Circonus`_ `REST API`_.
 
-.. image:: https://pypip.in/v/circonus/badge.png
+.. image:: https://pypip.in/v/circonus/badge.png?style=flat
    :target: https://pypi.python.org/pypi/circonus
    :alt: Latest release
 
