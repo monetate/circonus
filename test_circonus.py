@@ -69,6 +69,16 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertEqual(start, a.start)
             self.assertEqual(stop, a.stop)
 
+    def test_get(self):
+        with patch("circonus.client.requests.get") as get_patch:
+            get_patch.return_value = MagicMock()
+            cid = "/user"
+            self.c.get(cid)
+            get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
+            params = {"f_email": "test@example.com"}
+            self.c.get(cid, params)
+            get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=params)
+
 
 class AnnotationTestCase(unittest.TestCase):
 
