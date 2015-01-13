@@ -1,3 +1,4 @@
+COVERAGE  := coverage
 PIP       := pip
 PYTHON    := python
 RM        := rm
@@ -19,7 +20,10 @@ init:
 	$(PIP) install -r requirements.txt
 
 test:
-	$(PYTHON) test_circonus.py
+	$(COVERAGE) run --source=circonus test_circonus.py
+
+coverage: test
+	$(COVERAGE) report -m
 
 register:
 	$(PYTHON) $(SETUP) register

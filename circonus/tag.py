@@ -105,7 +105,7 @@ def with_common_tags(f):
     def wrapper(*args, **kwargs):
         _, cid, data = args
         if get_resource_from_cid(cid) in TAGGABLE_RESOURCES:
-            common_tags = COMMON_TAGS
+            common_tags = list(COMMON_TAGS)
             if "type" in data:
                 common_tags.append(_get_telemetry_tag(data))
 

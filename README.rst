@@ -11,6 +11,10 @@ A Python module for interacting with the `Circonus`_ `REST API`_.
    :target: https://travis-ci.org/monetate/circonus
    :alt: Travis CI build status
 
+.. image:: https://img.shields.io/coveralls/monetate/circonus.png?style=flat
+   :target: https://coveralls.io/r/monetate/circonus
+   :alt: Coveralls test coverage
+
 Features
 ========
 

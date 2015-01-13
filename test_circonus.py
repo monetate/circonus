@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from uuid import uuid4
 
+import json
 import unittest
 
 from circonus import CirconusClient, tag, util
@@ -38,6 +39,16 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
 
+    def test_annotation_context_manager(self):
+        a = self.c.annotation(self.c, "title", "category")
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            with a:
+                self.assertIsNotNone(a.start)
+                self.assertIsNone(a.stop)
+            self.assertIsNotNone(a.stop)
+            create_patch.assert_called()
+
     def test_create_annotation(self):
         with self.assertRaises(HTTPError):
             self.c.create_annotation("title", "category")
@@ -68,6 +79,32 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertEqual([], a.rel_metrics)
             self.assertEqual(start, a.start)
             self.assertEqual(stop, a.stop)
+
+    def test_get(self):
+        with patch("circonus.client.requests.get") as get_patch:
+            get_patch.return_value = MagicMock()
+            cid = "/user"
+            self.c.get(cid)
+            get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
+
+            params = {"f_email": "test@example.com"}
+            self.c.get(cid, params)
+            get_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=params)
+
+    def test_delete(self):
+        with patch("circonus.client.requests.delete") as delete_patch:
+            delete_patch.return_value = MagicMock()
+            cid = "/user/12345"
+            self.c.delete(cid)
+            delete_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
+
+    def test_update(self):
+        with patch("circonus.client.requests.put") as update_patch:
+            update_patch.return_value = MagicMock()
+            cid = "/user/12345"
+            data = {"email": "test@example.com"}
+            self.c.update(cid, data)
+            update_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=json.dumps(data))
 
 
 class AnnotationTestCase(unittest.TestCase):
@@ -121,6 +158,17 @@ class AnnotationTestCase(unittest.TestCase):
             self.assertGreaterEqual(a.stop - a.start, timedelta(seconds=0.1))
             self.assertLess(a.stop - a.start, timedelta(seconds=0.2))
 
+    def test_context_manager(self):
+        a = Annotation(self.c, "title", "category")
+
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            with a:
+                self.assertIsNotNone(a.start)
+                self.assertIsNone(a.stop)
+            self.assertIsNotNone(a.stop)
+            create_patch.assert_called()
+
 
 class UtilTestCase(unittest.TestCase):
 
@@ -144,6 +192,21 @@ class UtilTestCase(unittest.TestCase):
 
 
 class TagTestCase(unittest.TestCase):
+
+    def test_get_tag_string(self):
+        t = "tag"
+        c = "category"
+        expected = c + tag.TAG_SEP + t
+        self.assertEqual(expected, tag._get_tag_string(t, c))
+        expected = t
+        self.assertEqual(expected, tag._get_tag_string(t))
+
+    def test_get_telemetry_tag(self):
+        t = "collectd"
+        c = "telemetry"
+        cb = {"type": t}
+        expected = c + tag.TAG_SEP + t
+        self.assertEqual(expected, tag._get_telemetry_tag(cb))
 
     def test_get_updated_tags(self):
         existing_tags = ["environment:development", "region:us-east-1"]
@@ -251,6 +314,36 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, tags))
         self.assertIsNone(tag.get_tags_without({}, []))
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
+
+    def test_with_common_tags(self):
+        self.assertEqual([], tag.COMMON_TAGS)
+
+        @tag.with_common_tags
+        def noop(_, cid, data):
+            pass
+
+        cid = "/check_bundle/12345"
+        data = {}
+        noop(None, cid, data)
+        expected = {"tags": []}
+        self.assertEqual(expected, data)
+
+        common_tags = ["category:tag", "global"]
+        tag.COMMON_TAGS = common_tags
+        noop(None, cid, data)
+        self.assertItemsEqual(common_tags, tag.COMMON_TAGS)
+        expected = common_tags
+        self.assertItemsEqual(expected, data["tags"])
+
+        data["tags"].append("new:another")
+        noop(None, cid, data)
+        expected = ["category:tag", "global", "new:another"]
+        self.assertItemsEqual(expected, data["tags"])
+
+        data["type"] = "collectd"
+        noop(None, cid, data)
+        expected = ["category:tag", "global", "new:another", "telemetry:collectd"]
+        self.assertItemsEqual(expected, data["tags"])
 
 
 if __name__ == "__main__":
