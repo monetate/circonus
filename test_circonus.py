@@ -39,6 +39,16 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
 
+    def test_annotation_context_manager(self):
+        a = self.c.annotation(self.c, "title", "category")
+        with patch("circonus.client.CirconusClient.create") as create_patch:
+            create_patch.return_value = MagicMock()
+            with a:
+                self.assertIsNotNone(a.start)
+                self.assertIsNone(a.stop)
+            self.assertIsNotNone(a.stop)
+            create_patch.assert_called()
+
     def test_create_annotation(self):
         with self.assertRaises(HTTPError):
             self.c.create_annotation("title", "category")
