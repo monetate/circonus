@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from uuid import uuid4
 
+import json
 import unittest
 
 from circonus import CirconusClient, tag, util
@@ -86,6 +87,14 @@ class CirconusClientTestCase(unittest.TestCase):
             cid = "/user/12345"
             self.c.delete(cid)
             delete_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, params=None)
+
+    def test_update(self):
+        with patch("circonus.client.requests.put") as update_patch:
+            update_patch.return_value = MagicMock()
+            cid = "/user/12345"
+            data = {"email": "test@example.com"}
+            self.c.update(cid, data)
+            update_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=json.dumps(data))
 
 
 class AnnotationTestCase(unittest.TestCase):
