@@ -7,6 +7,8 @@ import codecs
 import circonus
 
 
+with codecs.open("README.rst", "r", "utf-8") as f:
+    readme = f.read()
 with codecs.open("HISTORY.rst", "r", "utf-8") as f:
     history = f.read()
 
@@ -14,7 +16,7 @@ setup(
     name="circonus",
     version=circonus.__version__,
     description="Interact with the Circonus REST API.",
-    long_description=history,
+    long_description=readme + "\n\n" + history,
     author="Monetate Inc.",
     author_email="kmolendyke@monetate.com",
     url="https://github.com/monetate/circonus",
