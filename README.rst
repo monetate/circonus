@@ -15,6 +15,10 @@ A Python module for interacting with the `Circonus`_ `REST API`_.
    :target: https://coveralls.io/r/monetate/circonus
    :alt: Coveralls test coverage
 
+.. image:: https://readthedocs.org/projects/circonus/badge/?version=latest
+   :target: https://readthedocs.org/projects/circonus/?badge=latest
+   :alt: Documentation Status
+
 Features
 ========
 
