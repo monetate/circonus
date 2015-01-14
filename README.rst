@@ -23,3 +23,5 @@ Documentation
 -------------
 
 Available at http://circonus.readthedocs.org
+
+.. _Circonus: http://www.circonus.com/
