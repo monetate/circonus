@@ -186,9 +186,28 @@ A `check bundle`_ to remove all of the `tags`_ associated with it:
      u'timeout': 10,
      u'type': u'collectd'}
 
+Delete
+------
+
+A `tag`_:
+
+.. code-block:: python
+
+    response = circonus.delete("tag/category:tag")
+    print response.status_code
+
+.. code-block:: python
+
+    204
+
+A `HTTP status code`_ ``204`` **No Content** indicates that the resource was
+deleted successfully.
+
 .. _custom Circonus HTTP request headers: https://login.circonus.com/resources/api#authentication
 .. _user: https://login.circonus.com/resources/api/calls/user
 .. _graph: https://login.circonus.com/resources/api/calls/graph
 .. _filtered: https://login.circonus.com/resources/api#filtering
 .. _check bundle: https://login.circonus.com/resources/api/calls/check_bundle
 .. _tags: https://login.circonus.com/resources/api/calls/tag
+.. _tag: https://login.circonus.com/resources/api/calls/tag
+.. _HTTP status code: http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
