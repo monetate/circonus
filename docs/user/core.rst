@@ -27,8 +27,8 @@ headers are set for all subsequent requests made via the ``circonus`` object:
     'X-Circonus-App-Name': 'my-circonus-app',
     'X-Circonus-Auth-Token': 'generated-in-circonus-ui'}
 
-``GET``
--------
+Get
+---
 
 The current `user`_:
 
