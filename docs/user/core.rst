@@ -42,8 +42,8 @@ The current `user`_:
     {u'_cid': u'/user/1234',
      u'contact_info': {u'sms': u'', u'xmpp': u''},
      u'email': u'user@example.com',
-     u'firstname': u'You',
-     u'lastname': u'Sir'}
+     u'firstname': u'Ewe',
+     u'lastname': u'Sure'}
 
 All users:
 
@@ -56,14 +56,14 @@ All users:
 
     [{u'_cid': u'/user/1234',
       u'contact_info': {u'sms': u'', u'xmpp': u''},
-      u'email': u'user@example.com',
-      u'firstname': u'You',
-      u'lastname': u'Sir'},
+      u'email': u'user0@example.com',
+      u'firstname': u'Ewe',
+      u'lastname': u'Sure'},
      {u'_cid': u'/user/1235',
       u'contact_info': {u'sms': u'', u'xmpp': u''},
-      u'email': u'umaam@example.com',
-      u'firstname': u'You',
-      u'lastname': u'Maam'},
+      u'email': u'user1@example.com',
+      u'firstname': u'Ewe',
+      u'lastname': u'Sure Jr.'},
       ...]
 
 A specific `graph`_:
