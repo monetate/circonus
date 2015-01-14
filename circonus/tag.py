@@ -53,6 +53,16 @@ def _get_updated_tags(update_function, *args):
     return updated_tags
 
 
+def is_taggable(cid):
+    """Is the resource represented by the given cid taggable?
+
+    Only resources which support tagging via the API are considered taggable.  Resources which have a _tags attribute
+    are not considered taggable since the _tags list cannot be updated via the API.
+
+    """
+    return get_resource_from_cid(cid) in TAGGABLE_RESOURCES
+
+
 def get_tags_with(resource, tags):
     """Get the list of tags for the given resource with the given list of tags added to it.
 
@@ -104,7 +114,7 @@ def with_common_tags(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         _, cid, data = args
-        if get_resource_from_cid(cid) in TAGGABLE_RESOURCES:
+        if is_taggable(cid):
             common_tags = list(COMMON_TAGS)
             if "type" in data:
                 common_tags.append(_get_telemetry_tag(data))

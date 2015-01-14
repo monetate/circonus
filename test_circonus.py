@@ -193,6 +193,26 @@ class UtilTestCase(unittest.TestCase):
 
 class TagTestCase(unittest.TestCase):
 
+    def test_is_taggable(self):
+        self.assertTrue(tag.is_taggable("/check_bundle/12345"))
+        self.assertTrue(tag.is_taggable("/contact_group/12345"))
+        self.assertTrue(tag.is_taggable("/graph/12345"))
+        self.assertTrue(tag.is_taggable("/maintenance/12345"))
+        self.assertTrue(tag.is_taggable("/metric_cluster/12345"))
+        self.assertTrue(tag.is_taggable("/template/12345"))
+        self.assertTrue(tag.is_taggable("/worksheet/12345"))
+
+        self.assertFalse(tag.is_taggable("/account"))
+        self.assertFalse(tag.is_taggable("/alert"))
+        self.assertFalse(tag.is_taggable("/annotation"))
+        self.assertFalse(tag.is_taggable("/broker"))
+        self.assertFalse(tag.is_taggable("/check"))
+        self.assertFalse(tag.is_taggable("/data"))
+        self.assertFalse(tag.is_taggable("/rebuild_broker"))
+        self.assertFalse(tag.is_taggable("/rule_set"))
+        self.assertFalse(tag.is_taggable("/rule_set_group"))
+        self.assertFalse(tag.is_taggable("/user"))
+
     def test_get_tag_string(self):
         t = "tag"
         c = "category"
