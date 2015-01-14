@@ -27,8 +27,8 @@ headers are set for all subsequent requests made via the ``circonus`` object:
     'X-Circonus-App-Name': 'my-circonus-app',
     'X-Circonus-Auth-Token': 'generated-in-circonus-ui'}
 
-``GET``
--------
+Get
+---
 
 The current `user`_:
 
@@ -42,8 +42,8 @@ The current `user`_:
     {u'_cid': u'/user/1234',
      u'contact_info': {u'sms': u'', u'xmpp': u''},
      u'email': u'user@example.com',
-     u'firstname': u'You',
-     u'lastname': u'Sir'}
+     u'firstname': u'Ewe',
+     u'lastname': u'Sure'}
 
 All users:
 
@@ -56,14 +56,14 @@ All users:
 
     [{u'_cid': u'/user/1234',
       u'contact_info': {u'sms': u'', u'xmpp': u''},
-      u'email': u'user@example.com',
-      u'firstname': u'You',
-      u'lastname': u'Sir'},
+      u'email': u'user0@example.com',
+      u'firstname': u'Ewe',
+      u'lastname': u'Sure'},
      {u'_cid': u'/user/1235',
       u'contact_info': {u'sms': u'', u'xmpp': u''},
-      u'email': u'umaam@example.com',
-      u'firstname': u'You',
-      u'lastname': u'Maam'},
+      u'email': u'user1@example.com',
+      u'firstname': u'Ewe',
+      u'lastname': u'Sure Jr.'},
       ...]
 
 A specific `graph`_:
@@ -122,7 +122,92 @@ Graphs `filtered`_ by ``title``:
      u'tags': [],
      u'title': u'cpu usage'}]
 
+Create
+------
+
+A `check bundle`_:
+
+.. code-block:: python
+
+    data = {
+        "brokers": ["/broker/123"],
+        "metrics": [{"type": "text", "name": "dummy"}],
+        "target": "10.0.0.1",
+        "type": "collectd"
+    }
+    response = circonus.create("check_bundle", data)
+    print response.json()
+
+.. code-block:: python
+
+    {u'_checks': [u'/check/123456'],
+     u'_cid': u'/check_bundle/12345',
+     u'_created': 1418331830,
+     u'_last_modified': 1418331830,
+     u'_last_modified_by': u'/user/1234',
+     u'brokers': [u'/broker/123'],
+     u'config': {u'asynch_metrics': u'false'},
+     u'display_name': u'10.0.0.1 - collectd',
+     u'metrics': [{u'name': u'dummy', u'status': u'active', u'type': u'text'}],
+     u'notes': None,
+     u'period': 60,
+     u'status': u'active',
+     u'tags': [u'telemetry:collectd'],
+     u'target': u'10.0.0.1',
+     u'timeout': 10,
+     u'type': u'collectd'}
+
+Update
+------
+
+A `check bundle`_ to remove all of the `tags`_ associated with it:
+
+.. code-block:: python
+
+    response = circonus.update("/check_bundle/12345", {"tags": []})
+    print response.json()
+
+.. code-block:: python
+
+    {u'_checks': [u'/check/123456'],
+     u'_cid': u'/check_bundle/12345',
+     u'_created': 1418331830,
+     u'_last_modified': 1418331830,
+     u'_last_modified_by': u'/user/1234',
+     u'brokers': [u'/broker/123'],
+     u'config': {u'asynch_metrics': u'false'},
+     u'display_name': u'10.0.0.1 - collectd',
+     u'metrics': [{u'name': u'dummy', u'status': u'active', u'type': u'text'}],
+     u'notes': None,
+     u'period': 60,
+     u'status': u'active',
+     u'tags': [],
+     u'target': u'10.0.0.1',
+     u'timeout': 10,
+     u'type': u'collectd'}
+
+Delete
+------
+
+A `tag`_:
+
+.. code-block:: python
+
+    response = circonus.delete("tag/category:tag")
+    print response.status_code
+
+.. code-block:: python
+
+    204
+
+A `HTTP status code`_ ``204`` **No Content** indicates that the resource was
+deleted successfully.
+
 .. _custom Circonus HTTP request headers: https://login.circonus.com/resources/api#authentication
 .. _user: https://login.circonus.com/resources/api/calls/user
 .. _graph: https://login.circonus.com/resources/api/calls/graph
 .. _filtered: https://login.circonus.com/resources/api#filtering
+.. _check bundle: https://login.circonus.com/resources/api/calls/check_bundle
+.. _tags: https://login.circonus.com/resources/api/calls/tag
+.. _tag: https://login.circonus.com/resources/api/calls/tag
+.. _HTTP status code: http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
