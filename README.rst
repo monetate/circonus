@@ -16,7 +16,7 @@ A Python module for interacting with the `Circonus`_ `REST API`_.
    :alt: Coveralls test coverage
 
 .. image:: https://readthedocs.org/projects/circonus/badge/?version=latest
-   :target: https://readthedocs.org/projects/circonus/?badge=latest
+   :target: http://circonus.readthedocs.org/en/latest/
    :alt: Documentation Status
 
 Documentation
