@@ -25,3 +25,4 @@ Documentation
 Available at http://circonus.readthedocs.org
 
 .. _Circonus: http://www.circonus.com/
+.. _REST API: https://login.circonus.com/resources/api
