@@ -101,14 +101,14 @@ def _get_telemetry_tag(check_bundle):
     return _get_tag_string(check_bundle["type"], "telemetry")
 
 
-def with_common_tags(common_tags=None):
+def with_common_tags(tags=None):
     """Decorator to ensure that Circonus resources are created or updated with a common list of tags.
 
     If a resource supports tags it should have at the very least a common set of tags attached to it.
 
     """
-    if common_tags is None:
-        common_tags = []
+    if tags is None:
+        tags = []
 
     def tags_decorator(f):
         @wraps(f)
@@ -116,15 +116,14 @@ def with_common_tags(common_tags=None):
             _, cid, data = args
             if is_taggable(cid):
                 if "type" in data:
-                    common_tags.append(_get_telemetry_tag(data))
+                    tags.append(_get_telemetry_tag(data))
 
-                tags = data.get("tags")
-                if tags:
-                    updated_tags = get_tags_with(data, common_tags)
+                if data.get("tags"):
+                    updated_tags = get_tags_with(data, tags)
                     if updated_tags:
                         data.update({"tags": updated_tags})
                 else:
-                    data["tags"] = common_tags
+                    data["tags"] = tags
             return f(*args, **kwargs)
         return wrapper
     return tags_decorator
