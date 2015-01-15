@@ -101,10 +101,10 @@ def _get_telemetry_tag(check_bundle):
     return _get_tag_string(check_bundle["type"], "telemetry")
 
 
-def with_common_tags(tags=None):
-    """Decorator to ensure that Circonus resources are created or updated with a common list of tags.
+def with_tags(tags=None):
+    """Decorator to ensure that the given list of tags exist on a resource.
 
-    If a resource supports tags it should have at the very least a common set of tags attached to it.
+    Only resources which support tagging via the API will be affected.
 
     """
     if tags is None:

@@ -406,8 +406,8 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, []))
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
 
-    def test_with_common_tags(self):
-        @tag.with_common_tags()
+    def test_with_tags(self):
+        @tag.with_tags()
         def noop(_, cid, data):
             pass
 
@@ -418,7 +418,7 @@ class TagTestCase(unittest.TestCase):
         self.assertEqual(expected, data)
 
         common_tags = ["category:tag", "global"]
-        @tag.with_common_tags(common_tags)
+        @tag.with_tags(common_tags)
         def noop(_, cid, data):
             pass
         noop(None, cid, data)
@@ -435,7 +435,7 @@ class TagTestCase(unittest.TestCase):
         expected = ["category:tag", "global", "new:another", "telemetry:collectd"]
         self.assertItemsEqual(expected, data["tags"])
 
-        @tag.with_common_tags(["common:new"])
+        @tag.with_tags(["common:new"])
         def noop(_, cid, data):
             pass
 

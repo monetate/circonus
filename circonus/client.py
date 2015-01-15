@@ -9,7 +9,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
-from circonus.tag import get_tags_with, is_taggable, with_common_tags
+from circonus.tag import get_tags_with, is_taggable, with_tags
 from requests.exceptions import HTTPError
 
 import requests
@@ -75,7 +75,7 @@ class CirconusClient(object):
         """DELETE the resource at the given cid."""
         return requests.delete(get_api_url(cid), params=params, headers=self.api_headers)
 
-    @with_common_tags()
+    @with_tags()
     @log_http_error
     def update(self, cid, data):
         """PUT data to the resource at the given cid.
@@ -85,7 +85,7 @@ class CirconusClient(object):
         """
         return requests.put(get_api_url(cid), data=json.dumps(data), headers=self.api_headers)
 
-    @with_common_tags()
+    @with_tags()
     @log_http_error
     def create(self, resource_type, data):
         """POST data to the given resource type.
