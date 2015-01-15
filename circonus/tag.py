@@ -1,7 +1,5 @@
 """Interact with the Circonus tag API."""
 
-from functools import wraps
-
 from circonus.util import get_resource_from_cid
 
 
