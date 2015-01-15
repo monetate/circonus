@@ -16,10 +16,6 @@ TAGGABLE_RESOURCES = [
     "worksheet"
 ]
 
-# Common or global tags which should be attached to all resources that support tags whenever they are created or
-# modified.
-COMMON_TAGS = []
-
 TAG_SEP = ":"
 
 
@@ -105,26 +101,30 @@ def _get_telemetry_tag(check_bundle):
     return _get_tag_string(check_bundle["type"], "telemetry")
 
 
-def with_common_tags(f):
+def with_common_tags(common_tags=None):
     """Decorator to ensure that Circonus resources are created or updated with a common list of tags.
 
     If a resource supports tags it should have at the very least a common set of tags attached to it.
 
     """
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        _, cid, data = args
-        if is_taggable(cid):
-            common_tags = list(COMMON_TAGS)
-            if "type" in data:
-                common_tags.append(_get_telemetry_tag(data))
+    if common_tags is None:
+        common_tags = []
 
-            tags = data.get("tags")
-            if tags:
-                updated_tags = get_tags_with(data, common_tags)
-                if updated_tags:
-                    data.update({"tags": updated_tags})
-            else:
-                data["tags"] = common_tags
-        return f(*args, **kwargs)
-    return wrapper
+    def tags_decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            _, cid, data = args
+            if is_taggable(cid):
+                if "type" in data:
+                    common_tags.append(_get_telemetry_tag(data))
+
+                tags = data.get("tags")
+                if tags:
+                    updated_tags = get_tags_with(data, common_tags)
+                    if updated_tags:
+                        data.update({"tags": updated_tags})
+                else:
+                    data["tags"] = common_tags
+            return f(*args, **kwargs)
+        return wrapper
+    return tags_decorator

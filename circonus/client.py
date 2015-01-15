@@ -9,7 +9,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
-from circonus.tag import with_common_tags
+from circonus.tag import get_tags_with, is_taggable, with_common_tags
 from requests.exceptions import HTTPError
 
 import requests
@@ -75,7 +75,7 @@ class CirconusClient(object):
         """DELETE the resource at the given cid."""
         return requests.delete(get_api_url(cid), params=params, headers=self.api_headers)
 
-    @with_common_tags
+    @with_common_tags()
     @log_http_error
     def update(self, cid, data):
         """PUT data to the resource at the given cid.
@@ -85,7 +85,7 @@ class CirconusClient(object):
         """
         return requests.put(get_api_url(cid), data=json.dumps(data), headers=self.api_headers)
 
-    @with_common_tags
+    @with_common_tags()
     @log_http_error
     def create(self, resource_type, data):
         """POST data to the given resource type.
@@ -94,6 +94,16 @@ class CirconusClient(object):
 
         """
         return requests.post(get_api_url(resource_type), data=json.dumps(data), headers=self.api_headers)
+
+    def update_with_tags(self, cid, new_tags):
+        """Update the resource represented by the given cid to have the new list of tags added to it."""
+        r = False
+        if is_taggable(cid):
+            r = self.get(cid)
+            tags = get_tags_with(r.json(), new_tags)
+            if tags:
+                r = self.update(cid, {"tags": tags})
+        return r
 
     def annotation(self, title, category, description="", rel_metrics=None):
         """Context manager and decorator for creating annotations."""

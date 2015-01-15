@@ -15,6 +15,9 @@ from circonus.client import API_BASE_URL, get_api_url
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
+import responses
+
+
 class CirconusClientTestCase(unittest.TestCase):
 
     @classmethod
@@ -105,6 +108,74 @@ class CirconusClientTestCase(unittest.TestCase):
             data = {"email": "test@example.com"}
             self.c.update(cid, data)
             update_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=json.dumps(data))
+
+    def test_update_with_tags_only_acts_on_taggable_resources(self):
+        self.assertFalse(self.c.update_with_tags("/account", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/alert", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/annotation", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/broker", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/check", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/data", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rebuild_broker", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rule_set", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rule_set_group", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/user", ["cat:tag"]))
+
+    @responses.activate
+    def test_update_with_tags(self):
+        cid = "/check_bundle/70681"
+        existing_tags = ["environment:development", "region:us-east-1"]
+        new_tags = ["new:tag"]
+        check_bundle = {"_checks": ["/check/92625"],
+                        "_cid": cid,
+                        "_created": 1403892322,
+                        "_last_modified": 1416419829,
+                        "_last_modified_by": "/user/2640",
+                        "brokers": ["/broker/301"],
+                        "config": {"acct_id": "999",
+                                   "api_key": "deadbeef",
+                                   "application_id": "999"},
+                        "display_name": "Service",
+                        "metrics": [{"name": "DB", "status": "active", "type": "numeric"}],
+                        "notes": None,
+                        "period": 60,
+                        "status": "active",
+                        "tags": existing_tags,
+                        "target": "10.1.2.3",
+                        "timeout": 10,
+                        "type": "newrelic_rpm"}
+        responses.add(responses.GET, get_api_url(cid), body=json.dumps(check_bundle), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.put") as put_patch:
+            self.c.update_with_tags(cid, new_tags)
+            data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+
+        new_tags = ["newer:tag", "newest:tag"]
+        check_bundle = {"_checks": ["/check/92625"],
+                        "_cid": cid,
+                        "_created": 1403892322,
+                        "_last_modified": 1416419829,
+                        "_last_modified_by": "/user/2640",
+                        "brokers": ["/broker/301"],
+                        "config": {"acct_id": "999",
+                                   "api_key": "deadbeef",
+                                   "application_id": "999"},
+                        "display_name": "Service",
+                        "metrics": [{"name": "DB", "status": "active", "type": "numeric"}],
+                        "notes": None,
+                        "period": 60,
+                        "status": "active",
+                        "tags": existing_tags,
+                        "target": "10.1.2.3",
+                        "timeout": 10,
+                        "type": "newrelic_rpm"}
+        responses.add(responses.GET, get_api_url(cid), body=json.dumps(check_bundle), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.put") as put_patch:
+            self.c.update_with_tags(cid, new_tags)
+            data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
 
 class AnnotationTestCase(unittest.TestCase):
@@ -336,9 +407,7 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
 
     def test_with_common_tags(self):
-        self.assertEqual([], tag.COMMON_TAGS)
-
-        @tag.with_common_tags
+        @tag.with_common_tags()
         def noop(_, cid, data):
             pass
 
@@ -349,9 +418,10 @@ class TagTestCase(unittest.TestCase):
         self.assertEqual(expected, data)
 
         common_tags = ["category:tag", "global"]
-        tag.COMMON_TAGS = common_tags
+        @tag.with_common_tags(common_tags)
+        def noop(_, cid, data):
+            pass
         noop(None, cid, data)
-        self.assertItemsEqual(common_tags, tag.COMMON_TAGS)
         expected = common_tags
         self.assertItemsEqual(expected, data["tags"])
 
@@ -364,6 +434,22 @@ class TagTestCase(unittest.TestCase):
         noop(None, cid, data)
         expected = ["category:tag", "global", "new:another", "telemetry:collectd"]
         self.assertItemsEqual(expected, data["tags"])
+
+        @tag.with_common_tags(["common:new"])
+        def noop(_, cid, data):
+            pass
+
+        cid = "/check_bundle/12345"
+        data = {}
+        noop(None, cid, data)
+        expected = {"tags": ["common:new"]}
+        self.assertEqual(expected, data)
+
+        cid = "/check_bundle/12345"
+        data = {"tags": ["existing:tag"]}
+        noop(None, cid, data)
+        expected = {"tags": ["existing:tag", "common:new"]}
+        self.assertEqual(expected, data)
 
 
 if __name__ == "__main__":
