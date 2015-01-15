@@ -99,31 +99,3 @@ def get_telemetry_tag(check_bundle):
 
     """
     return _get_tag_string(check_bundle["type"], "telemetry")
-
-
-def with_tags(tags=None):
-    """Decorator to ensure that the given list of tags exist on a resource.
-
-    Only resources which support tagging via the API will be affected.
-
-    """
-    if tags is None:
-        tags = []
-
-    def tags_decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            _, cid, data = args
-            if is_taggable(cid):
-                if "type" in data:
-                    tags.append(get_telemetry_tag(data))
-
-                if data.get("tags"):
-                    updated_tags = get_tags_with(data, tags)
-                    if updated_tags:
-                        data.update({"tags": updated_tags})
-                else:
-                    data["tags"] = tags
-            return f(*args, **kwargs)
-        return wrapper
-    return tags_decorator
