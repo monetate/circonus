@@ -26,6 +26,35 @@ class CirconusClientTestCase(unittest.TestCase):
         cls.api_token = str(uuid4())
         cls.c = CirconusClient(cls.api_app_name, cls.api_token)
 
+    @responses.activate
+    def test_common_tags(self):
+        self.assertEqual([], self.c.common_tags)
+
+        common_tags = ["cat:tag", "global"]
+        c = CirconusClient(self.c.api_app_name, self.c.api_token, common_tags)
+        self.assertEqual(common_tags, c.common_tags)
+
+        cid = "/check_bundle/12345"
+        data = json.dumps({"tags": common_tags})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, {})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+
+        tags_with_telemetry = common_tags + ["telemetry:collectd"]
+        data = json.dumps({"type": "collectd", "tags": tags_with_telemetry})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, {"type": "collectd"})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+            self.assertItemsEqual(common_tags, c.common_tags)
+
+        tags_with_telemetry = common_tags + ["telemetry:collectd"]
+        data = {"type": "collectd", "tags": ["existing:tag"]}
+        expected_data = json.dumps({"type": "collectd", "tags": tag.get_tags_with(data, tags_with_telemetry)})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, data)
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=expected_data)
+            self.assertItemsEqual(common_tags, c.common_tags)
+
     def test_api_headers(self):
         expected = {
             "Accept": "application/json",
@@ -297,7 +326,7 @@ class TagTestCase(unittest.TestCase):
         c = "telemetry"
         cb = {"type": t}
         expected = c + tag.TAG_SEP + t
-        self.assertEqual(expected, tag._get_telemetry_tag(cb))
+        self.assertEqual(expected, tag.get_telemetry_tag(cb))
 
     def test_get_updated_tags(self):
         existing_tags = ["environment:development", "region:us-east-1"]

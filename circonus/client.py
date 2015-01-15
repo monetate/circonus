@@ -9,7 +9,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
-from circonus.tag import get_tags_with, is_taggable, with_tags
+from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
 import requests
@@ -34,6 +34,30 @@ def get_api_url(resource_type_or_cid):
     return pathsep.join([API_BASE_URL, resource_type_or_cid.strip(pathsep)])
 
 
+def with_common_tags(f):
+    """Decorator to ensure that common tags exist on resources.
+
+    Only resources which support tagging via the API will be affected.
+
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        circonus_client, cid, data = args
+        common_tags = list(circonus_client.common_tags)
+        if is_taggable(cid):
+            if "type" in data:
+                common_tags.append(get_telemetry_tag(data))
+
+            if data.get("tags"):
+                updated_tags = get_tags_with(data, common_tags)
+                if updated_tags:
+                    data.update({"tags": updated_tags})
+            else:
+                data["tags"] = common_tags
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def log_http_error(f):
     """Decorator to log any HTTPError raised by a request."""
     @wraps(f)
@@ -51,7 +75,7 @@ def log_http_error(f):
 class CirconusClient(object):
     """A Circonus REST API client."""
 
-    def __init__(self, api_app_name, api_token):
+    def __init__(self, api_app_name, api_token, common_tags=None):
         self.api_app_name = api_app_name
         self.api_token = api_token
         self.api_headers = {
@@ -59,6 +83,10 @@ class CirconusClient(object):
             "X-Circonus-App-Name": self.api_app_name,
             "X-Circonus-Auth-Token": self.api_token
         }
+        if common_tags is None:
+            self.common_tags = []
+        else:
+            self.common_tags = common_tags
 
     @log_http_error
     def get(self, resource_type_or_cid, params=None):
@@ -75,7 +103,7 @@ class CirconusClient(object):
         """DELETE the resource at the given cid."""
         return requests.delete(get_api_url(cid), params=params, headers=self.api_headers)
 
-    @with_tags()
+    @with_common_tags
     @log_http_error
     def update(self, cid, data):
         """PUT data to the resource at the given cid.
@@ -85,7 +113,7 @@ class CirconusClient(object):
         """
         return requests.put(get_api_url(cid), data=json.dumps(data), headers=self.api_headers)
 
-    @with_tags()
+    @with_common_tags
     @log_http_error
     def create(self, resource_type, data):
         """POST data to the given resource type.

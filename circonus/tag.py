@@ -91,7 +91,7 @@ def get_tags_without(resource, tags):
     return _get_updated_tags(set.difference, resource, tags)
 
 
-def _get_telemetry_tag(check_bundle):
+def get_telemetry_tag(check_bundle):
     """Get a telemetry tag string for the given check bundle.
 
     If the given check bundle has a type attribute a tag of the form, "telemetry:type", will be returned.  This makes
@@ -116,7 +116,7 @@ def with_tags(tags=None):
             _, cid, data = args
             if is_taggable(cid):
                 if "type" in data:
-                    tags.append(_get_telemetry_tag(data))
+                    tags.append(get_telemetry_tag(data))
 
                 if data.get("tags"):
                     updated_tags = get_tags_with(data, tags)
