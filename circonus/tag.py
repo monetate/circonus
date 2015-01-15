@@ -36,7 +36,7 @@ def _get_updated_tags(update_function, *args):
 
     """
     updated_tags = None
-    resource, tags = args
+    resource, tags = args[:2]
     existing_tags = resource.get("tags")
     if existing_tags is not None:
         existing_tags_set = set(existing_tags)
