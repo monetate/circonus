@@ -48,8 +48,8 @@ def with_common_tags(f):
     """
     @wraps(f)
     def wrapper(*args, **kwargs):
-        circonus_client, cid, data = args[:3]
-        common_tags = list(circonus_client.common_tags)
+        client, cid, data = args[:3]
+        common_tags = list(client.common_tags)
         if is_taggable(cid):
             if "type" in data:
                 common_tags.append(get_telemetry_tag(data))
