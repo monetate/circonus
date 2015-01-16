@@ -1,6 +1,17 @@
 Release History
 ---------------
 
+0.0.6 (2015-01-16)
+++++++++++++++++++
+
+**Improvements**
+
+- Add optional common tags parameter to CirconusClient class for a cleaner way
+  to specify common tags on a given instance of the client.
+- Update all docstrings to reStructuredText format with parameter and return
+  types.
+- Add API documentation.
+
 0.0.5 (2015-01-13)
 ++++++++++++++++++
 
