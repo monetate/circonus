@@ -1,4 +1,9 @@
-"""Interact with the Circonus REST API."""
+"""
+
+circonus.client
+~~~~~~~~~~~~~~~
+
+"""
 
 from datetime import datetime
 from functools import wraps
@@ -9,7 +14,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
-from circonus.tag import with_common_tags
+from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
 import requests
@@ -25,17 +30,42 @@ log = logging.getLogger(__name__)
 
 
 def get_api_url(resource_type_or_cid):
-    """Get a valid fully qualified API URL for the given resource type or cid string.
+    """Get a valid fully qualified Circonus API URL for the given resource type or ``cid``.
 
-    resource type should be specified as "path/to/resource".  cid should be specified as
-    "path/to/particular/resource/123456".
+    :param str resource_type_or_cid: The resource type or ``cid`` representing a specific resource.
+    :return: The API URL.
+    :rtype: :py:class:`str`
 
     """
     return pathsep.join([API_BASE_URL, resource_type_or_cid.strip(pathsep)])
 
 
+def with_common_tags(f):
+    """Decorator to ensure that common tags exist on resources.
+
+    Only resources which support tagging via the Circonus API will be affected.
+
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        client, cid, data = args[:3]
+        common_tags = list(client.common_tags)
+        if is_taggable(cid):
+            if "type" in data:
+                common_tags.append(get_telemetry_tag(data))
+
+            if data.get("tags"):
+                updated_tags = get_tags_with(data, common_tags)
+                if updated_tags:
+                    data.update({"tags": updated_tags})
+            else:
+                data["tags"] = common_tags
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def log_http_error(f):
-    """Decorator to log any HTTPError raised by a request."""
+    """Decorator for :py:mod:`logging` any :class:`~requests.exceptions.HTTPError` raised by a request."""
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
@@ -49,9 +79,28 @@ def log_http_error(f):
 
 
 class CirconusClient(object):
-    """A Circonus REST API client."""
+    """Construct a :class:`CirconusClient`.
 
-    def __init__(self, api_app_name, api_token):
+    :param str api_app_name: The Circonus API application name.
+    :param str api_token: The Circonus API token.
+    :param list common_tags: (optional) The :py:class:`str` tags to apply to all resources.
+    :rtype: :class:`CirconusClient`
+
+    Usage::
+
+        >>> from circonus import CirconusClient
+        >>> circonus = CirconusClient("my-circonus-app", "generated-by-circonus-ui")
+        >>> response = circonus.get("/user/current")
+        >>> response.json()
+        {u'_cid': u'/user/1234',
+         u'contact_info': {u'sms': u'', u'xmpp': u''},
+         u'email': u'user@example.com',
+         u'firstname': u'Ewe',
+         u'lastname': u'Sure'}
+
+    """
+
+    def __init__(self, api_app_name, api_token, common_tags=None):
         self.api_app_name = api_app_name
         self.api_token = api_token
         self.api_headers = {
@@ -59,28 +108,45 @@ class CirconusClient(object):
             "X-Circonus-App-Name": self.api_app_name,
             "X-Circonus-Auth-Token": self.api_token
         }
+        if common_tags is None:
+            self.common_tags = []
+        else:
+            self.common_tags = common_tags
 
     @log_http_error
     def get(self, resource_type_or_cid, params=None):
-        """GET the resource at the given resource type or cid.
+        """Get the resource at resource type or ``cid`` via :func:`requests.get`.
 
-        If a cid is given, , e.g., "/check_bundle/123456", a single resource should be returned in the response JSON.
-        If a resource type is given, e.g., "/user", a list of resources will be returned in the response JSON.
+        :param str resource_type_or_cid: The resource type or ``cid`` representing a specific resource.
+        :param dict params: (optional) The parameters to pass to :func:`requests.get`.
+        :rtype: :class:`requests.Response`
+
+        If a resource type is given, e.g., ``/user``, a :py:class:`list` of resources will exist in the :class:`~requests.Response` JSON.
+
+        If a ``cid`` is given, e.g., ``/check_bundle/123456``, a single resource will exist in the :class:`~requests.Response` JSON.
 
         """
         return requests.get(get_api_url(resource_type_or_cid), params=params, headers=self.api_headers)
 
     @log_http_error
     def delete(self, cid, params=None):
-        """DELETE the resource at the given cid."""
+        """Delete the resource at ``cid`` via :func:`requests.delete`.
+
+        :param str cid: The resource to delete.
+        :param dict params: (optional) The parameters to pass to :func:`requests.delete`.
+        :rtype: :class:`requests.Response`
+
+        """
         return requests.delete(get_api_url(cid), params=params, headers=self.api_headers)
 
     @with_common_tags
     @log_http_error
     def update(self, cid, data):
-        """PUT data to the resource at the given cid.
+        """Update the resource at ``cid`` with ``data`` via :func:`requests.put`.
 
-        data should be a dict.
+        :param str cid: The resource to update.
+        :param dict data: The data used to update the resource.
+        :rtype: :class:`requests.Response`
 
         """
         return requests.put(get_api_url(cid), data=json.dumps(data), headers=self.api_headers)
@@ -88,27 +154,65 @@ class CirconusClient(object):
     @with_common_tags
     @log_http_error
     def create(self, resource_type, data):
-        """POST data to the given resource type.
+        """Create the resource type with ``data`` via :func:`requests.post`.
 
-        data should be a dict.
+        :param str resource_type: The resource type to create.
+        :param dict data: The data used to create the resource.
+        :rtype: :class:`requests.Response`
 
         """
         return requests.post(get_api_url(resource_type), data=json.dumps(data), headers=self.api_headers)
 
+    def update_with_tags(self, cid, new_tags):
+        """Update the resource at ``cid`` to have ``new_tags`` added to it via :func:`update`.
+
+        :param str cid: The resource to update.
+        :param list new_tags: The :py:class:`str` tags to add to the resource.
+        :rtype: :class:`requests.Response`
+
+        """
+        r = False
+        if is_taggable(cid):
+            r = self.get(cid)
+            tags = get_tags_with(r.json(), new_tags)
+            if tags:
+                r = self.update(cid, {"tags": tags})
+        return r
+
     def annotation(self, title, category, description="", rel_metrics=None):
-        """Context manager and decorator for creating annotations."""
+        """Context manager and decorator for creating :class:`~circonus.annotation.Annotation` instances.
+
+        :param str title: The title.
+        :param str category: The category.
+        :param str description: (optional) The description.
+        :param list rel_metrics: (optional) The :py:class:`str` names of metrics related to this annotation.
+        :rtype: :class:`~circonus.annotation.Annotation`
+
+        If ``rel_metrics`` is given, the metric names should be specified in the fully qualified format
+        ``<digits>_<string>`` as required by the Circonus API documentation for `annotation
+        <https://login.circonus.com/resources/api/calls/annotation>`_.
+
+        """
         return Annotation(self, title, category, description, rel_metrics)
 
     def create_annotation(self, title, category, start=None, stop=None, description="", rel_metrics=None):
-        """Create an annotation.
+        """Create an :class:`~circonus.annotation.Annotation` instance immediately.
 
-        start and stop, if given, should be datetime instances.  start defaults to now.  stop defaults to start.
+        :param str title: The title.
+        :param str category: The category.
+        :param datetime.datetime start: (optional) The start time.
+        :param datetime.datetime  stop: (optional) The stop time.
+        :param str description: (optional) The description.
+        :param list rel_metrics: (optional) The :py:class:`str` names of metrics related to this annotation.
+        :rtype: :class:`~circonus.annotation.Annotation`
 
-        Note: Sub-second annotation resolution is not supported by Circonus.
+        *Note*: sub-second annotation time resolution is not supported by Circonus.
 
-        rel_metrics should be a list of related metrics.
+        ``stop`` defaults to the value of ``start`` if it is not given.
 
-        The annotation object is returned.  The requests response attached to that object as the response attribute.
+        If ``rel_metrics`` is given, the metric names should be specified in the fully qualified format
+        ``<digits>_<string>`` as required by the Circonus API documentation for `annotation
+        <https://login.circonus.com/resources/api/calls/annotation>`_.
 
         """
         a = Annotation(self, title, category, description, rel_metrics)

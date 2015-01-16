@@ -1,7 +1,5 @@
 """Interact with the Circonus tag API."""
 
-from functools import wraps
-
 from circonus.util import get_resource_from_cid
 
 
@@ -15,10 +13,6 @@ TAGGABLE_RESOURCES = [
     "template",
     "worksheet"
 ]
-
-# Common or global tags which should be attached to all resources that support tags whenever they are created or
-# modified.
-COMMON_TAGS = []
 
 TAG_SEP = ":"
 
@@ -42,7 +36,7 @@ def _get_updated_tags(update_function, *args):
 
     """
     updated_tags = None
-    resource, tags = args
+    resource, tags = args[:2]
     existing_tags = resource.get("tags")
     if existing_tags is not None:
         existing_tags_set = set(existing_tags)
@@ -51,6 +45,16 @@ def _get_updated_tags(update_function, *args):
         if existing_tags_set != updated_tags_set:
             updated_tags = list(updated_tags_set)
     return updated_tags
+
+
+def is_taggable(cid):
+    """Is the resource represented by the given cid taggable?
+
+    Only resources which support tagging via the API are considered taggable.  Resources which have a _tags attribute
+    are not considered taggable since the _tags list cannot be updated via the API.
+
+    """
+    return get_resource_from_cid(cid) in TAGGABLE_RESOURCES
 
 
 def get_tags_with(resource, tags):
@@ -85,7 +89,7 @@ def get_tags_without(resource, tags):
     return _get_updated_tags(set.difference, resource, tags)
 
 
-def _get_telemetry_tag(check_bundle):
+def get_telemetry_tag(check_bundle):
     """Get a telemetry tag string for the given check bundle.
 
     If the given check bundle has a type attribute a tag of the form, "telemetry:type", will be returned.  This makes
@@ -93,28 +97,3 @@ def _get_telemetry_tag(check_bundle):
 
     """
     return _get_tag_string(check_bundle["type"], "telemetry")
-
-
-def with_common_tags(f):
-    """Decorator to ensure that Circonus resources are created or updated with a common list of tags.
-
-    If a resource supports tags it should have at the very least a common set of tags attached to it.
-
-    """
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        _, cid, data = args
-        if get_resource_from_cid(cid) in TAGGABLE_RESOURCES:
-            common_tags = list(COMMON_TAGS)
-            if "type" in data:
-                common_tags.append(_get_telemetry_tag(data))
-
-            tags = data.get("tags")
-            if tags:
-                updated_tags = get_tags_with(data, common_tags)
-                if updated_tags:
-                    data.update({"tags": updated_tags})
-            else:
-                data["tags"] = common_tags
-        return f(*args, **kwargs)
-    return wrapper

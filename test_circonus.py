@@ -15,6 +15,9 @@ from circonus.client import API_BASE_URL, get_api_url
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
+import responses
+
+
 class CirconusClientTestCase(unittest.TestCase):
 
     @classmethod
@@ -22,6 +25,35 @@ class CirconusClientTestCase(unittest.TestCase):
         cls.api_app_name = "TEST"
         cls.api_token = str(uuid4())
         cls.c = CirconusClient(cls.api_app_name, cls.api_token)
+
+    @responses.activate
+    def test_common_tags(self):
+        self.assertEqual([], self.c.common_tags)
+
+        common_tags = ["cat:tag", "global"]
+        c = CirconusClient(self.c.api_app_name, self.c.api_token, common_tags)
+        self.assertEqual(common_tags, c.common_tags)
+
+        cid = "/check_bundle/12345"
+        data = json.dumps({"tags": common_tags})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, {})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+
+        tags_with_telemetry = common_tags + ["telemetry:collectd"]
+        data = json.dumps({"type": "collectd", "tags": tags_with_telemetry})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, {"type": "collectd"})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+            self.assertItemsEqual(common_tags, c.common_tags)
+
+        tags_with_telemetry = common_tags + ["telemetry:collectd"]
+        data = {"type": "collectd", "tags": ["existing:tag"]}
+        expected_data = json.dumps({"type": "collectd", "tags": tag.get_tags_with(data, tags_with_telemetry)})
+        with patch("circonus.client.requests.put") as put_patch:
+            c.update(cid, data)
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=expected_data)
+            self.assertItemsEqual(common_tags, c.common_tags)
 
     def test_api_headers(self):
         expected = {
@@ -105,6 +137,74 @@ class CirconusClientTestCase(unittest.TestCase):
             data = {"email": "test@example.com"}
             self.c.update(cid, data)
             update_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=json.dumps(data))
+
+    def test_update_with_tags_only_acts_on_taggable_resources(self):
+        self.assertFalse(self.c.update_with_tags("/account", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/alert", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/annotation", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/broker", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/check", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/data", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rebuild_broker", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rule_set", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/rule_set_group", ["cat:tag"]))
+        self.assertFalse(self.c.update_with_tags("/user", ["cat:tag"]))
+
+    @responses.activate
+    def test_update_with_tags(self):
+        cid = "/check_bundle/70681"
+        existing_tags = ["environment:development", "region:us-east-1"]
+        new_tags = ["new:tag"]
+        check_bundle = {"_checks": ["/check/92625"],
+                        "_cid": cid,
+                        "_created": 1403892322,
+                        "_last_modified": 1416419829,
+                        "_last_modified_by": "/user/2640",
+                        "brokers": ["/broker/301"],
+                        "config": {"acct_id": "999",
+                                   "api_key": "deadbeef",
+                                   "application_id": "999"},
+                        "display_name": "Service",
+                        "metrics": [{"name": "DB", "status": "active", "type": "numeric"}],
+                        "notes": None,
+                        "period": 60,
+                        "status": "active",
+                        "tags": existing_tags,
+                        "target": "10.1.2.3",
+                        "timeout": 10,
+                        "type": "newrelic_rpm"}
+        responses.add(responses.GET, get_api_url(cid), body=json.dumps(check_bundle), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.put") as put_patch:
+            self.c.update_with_tags(cid, new_tags)
+            data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
+
+        new_tags = ["newer:tag", "newest:tag"]
+        check_bundle = {"_checks": ["/check/92625"],
+                        "_cid": cid,
+                        "_created": 1403892322,
+                        "_last_modified": 1416419829,
+                        "_last_modified_by": "/user/2640",
+                        "brokers": ["/broker/301"],
+                        "config": {"acct_id": "999",
+                                   "api_key": "deadbeef",
+                                   "application_id": "999"},
+                        "display_name": "Service",
+                        "metrics": [{"name": "DB", "status": "active", "type": "numeric"}],
+                        "notes": None,
+                        "period": 60,
+                        "status": "active",
+                        "tags": existing_tags,
+                        "target": "10.1.2.3",
+                        "timeout": 10,
+                        "type": "newrelic_rpm"}
+        responses.add(responses.GET, get_api_url(cid), body=json.dumps(check_bundle), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.put") as put_patch:
+            self.c.update_with_tags(cid, new_tags)
+            data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
+            put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
 
 class AnnotationTestCase(unittest.TestCase):
@@ -193,6 +293,26 @@ class UtilTestCase(unittest.TestCase):
 
 class TagTestCase(unittest.TestCase):
 
+    def test_is_taggable(self):
+        self.assertTrue(tag.is_taggable("/check_bundle/12345"))
+        self.assertTrue(tag.is_taggable("/contact_group/12345"))
+        self.assertTrue(tag.is_taggable("/graph/12345"))
+        self.assertTrue(tag.is_taggable("/maintenance/12345"))
+        self.assertTrue(tag.is_taggable("/metric_cluster/12345"))
+        self.assertTrue(tag.is_taggable("/template/12345"))
+        self.assertTrue(tag.is_taggable("/worksheet/12345"))
+
+        self.assertFalse(tag.is_taggable("/account"))
+        self.assertFalse(tag.is_taggable("/alert"))
+        self.assertFalse(tag.is_taggable("/annotation"))
+        self.assertFalse(tag.is_taggable("/broker"))
+        self.assertFalse(tag.is_taggable("/check"))
+        self.assertFalse(tag.is_taggable("/data"))
+        self.assertFalse(tag.is_taggable("/rebuild_broker"))
+        self.assertFalse(tag.is_taggable("/rule_set"))
+        self.assertFalse(tag.is_taggable("/rule_set_group"))
+        self.assertFalse(tag.is_taggable("/user"))
+
     def test_get_tag_string(self):
         t = "tag"
         c = "category"
@@ -206,7 +326,7 @@ class TagTestCase(unittest.TestCase):
         c = "telemetry"
         cb = {"type": t}
         expected = c + tag.TAG_SEP + t
-        self.assertEqual(expected, tag._get_telemetry_tag(cb))
+        self.assertEqual(expected, tag.get_telemetry_tag(cb))
 
     def test_get_updated_tags(self):
         existing_tags = ["environment:development", "region:us-east-1"]
@@ -314,36 +434,6 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, tags))
         self.assertIsNone(tag.get_tags_without({}, []))
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
-
-    def test_with_common_tags(self):
-        self.assertEqual([], tag.COMMON_TAGS)
-
-        @tag.with_common_tags
-        def noop(_, cid, data):
-            pass
-
-        cid = "/check_bundle/12345"
-        data = {}
-        noop(None, cid, data)
-        expected = {"tags": []}
-        self.assertEqual(expected, data)
-
-        common_tags = ["category:tag", "global"]
-        tag.COMMON_TAGS = common_tags
-        noop(None, cid, data)
-        self.assertItemsEqual(common_tags, tag.COMMON_TAGS)
-        expected = common_tags
-        self.assertItemsEqual(expected, data["tags"])
-
-        data["tags"].append("new:another")
-        noop(None, cid, data)
-        expected = ["category:tag", "global", "new:another"]
-        self.assertItemsEqual(expected, data["tags"])
-
-        data["type"] = "collectd"
-        noop(None, cid, data)
-        expected = ["category:tag", "global", "new:another", "telemetry:collectd"]
-        self.assertItemsEqual(expected, data["tags"])
 
 
 if __name__ == "__main__":

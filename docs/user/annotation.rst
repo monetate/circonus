@@ -3,8 +3,9 @@
 Annotation
 ==========
 
-An `annotation <https://login.circonus.com/resources/api/calls/annotation>`_
-can be created in several ways.
+A `Circonus annotation
+<https://login.circonus.com/resources/api/calls/annotation>`_ can be created
+in several ways.
 
 Explicit
 --------
@@ -13,9 +14,10 @@ Explicit
 
     annotation = circonus.create_annotation("title", "category")
 
-*Note:* The ``create_annotation`` method returns an ``Annotation`` object
-rather than a ``requests`` response object.  The response object is available
-at the ``response`` attribute on the returned object.
+*Note:* The :meth:`~circonus.CirconusClient.create_annotation` method returns
+an :class:`~circonus.client.Annotation` instance rather than a
+:class:`requests.Response` instance.  The :class:`requests.Response` object is
+available at the ``response`` attribute on the returned object.
 
 Decorator
 ---------
@@ -27,8 +29,9 @@ Decorator
         sleep(10)
 
 This will create an annotation with the given parameters and ``start`` and
-``stop`` times that are automatically set to the UTC values of the `enter`_
-and `exit`_ for the decorated function.
+``stop`` times that are automatically set to the UTC values of the
+:py:meth:`object.__enter__` and :py:meth:`object.__exit__` for the decorated
+function.
 
 Context Manager
 ---------------
@@ -39,9 +42,5 @@ Context Manager
         sleep(10)
 
 This will create an annotation with the given parameters and ``start`` and
-``stop`` times that are automatically set to the UTC values of the `enter`_
-and `exit`_ for the block.
-
-.. _magic methods: http://www.rafekettler.com/magicmethods.html
-.. _enter: https://docs.python.org/2/reference/datamodel.html#object.__enter__
-.. _exit: https://docs.python.org/2/reference/datamodel.html#object.__exit__
+``stop`` times that are automatically set to the UTC values of the
+:py:meth:`object.__enter__` and :py:meth:`object.__exit__` for the block.

@@ -52,6 +52,15 @@ User Guide
    user/install
    user/core
    user/annotation
+   user/tag
+
+API Documentation
+-----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   api
 
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
