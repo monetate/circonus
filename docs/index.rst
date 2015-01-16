@@ -52,6 +52,7 @@ User Guide
    user/install
    user/core
    user/annotation
+   user/tag
 
 API Documentation
 -----------------
