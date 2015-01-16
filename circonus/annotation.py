@@ -1,4 +1,9 @@
-"""Interact with the Circonus annotation API."""
+"""
+
+circonus.annotation
+~~~~~~~~~~~~~~~~~~~
+
+"""
 
 from calendar import timegm
 from datetime import datetime
@@ -6,13 +11,35 @@ from functools import wraps
 
 
 class Annotation(object):
-    """Context manager and decorator for creating annotations."""
+    """Construct an :class:`Annotation`.
+
+    :param client: The client to create the annotation with.
+    :type client: :class:`CirconusClient`
+    :param str title: The title.
+    :param str category: The category.
+    :param str description: (optional) The description.
+    :param list rel_metrics: (optional) The :py:class:`str` names of metrics related to this annotation.
+
+    If ``rel_metrics`` is given, the metric names should be specified in the fully qualified format
+    ``<digits>_<string>`` as required by the Circonus API documentation for `annotation
+    <https://login.circonus.com/resources/api/calls/annotation>`_.
+
+    """
 
     RESOURCE_PATH = "annotation"
 
     @staticmethod
     def datetime_to_int(dt):
-        """Convert the given datetime object into an integer."""
+        """Convert date and time to seconds since the epoch.
+
+        :param datetime.datetime dt: The date and time to convert.
+        :rtype: :py:class:`int`
+
+        ``dt`` is expected to have been created for the UTC date and time, e.g., with
+        :py:meth:`datetime.datetime.utcnow`.  It is converted to seconds since the epoch with
+        :py:func:`calendar.timegm` to respect UTC.
+
+        """
         return int(timegm(dt.timetuple()))
 
     def __init__(self, client, title, category, description="", rel_metrics=None):
