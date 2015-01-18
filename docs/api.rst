@@ -46,6 +46,15 @@ Classes
 .. autoclass:: circonus.client.Annotation
    :members:
 
+Modules
+-------
+
+.. automodule:: circonus.collectd
+   :members:
+
+.. automodule:: circonus.metric
+   :members:
+
 .. _Circonus REST API: https://login.circonus.com/resources/api
 .. _JSON: http://json.org/
 .. _error: https://login.circonus.com/resources/api#errors
