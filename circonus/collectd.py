@@ -21,3 +21,22 @@ CPU_METRIC_RE = re.compile(r"""
 `.*`                            # Anything in between
 """, re.X)
 """A compiled regular expression which matches collectd CPU metrics."""
+
+
+def get_cpus(metrics):
+    """Get a list of strings representing the CPUs available in ``metrics``.
+
+    :param list metrics: The metrics used to look for CPUs.
+    :rtype: :py:class:`list`
+
+    The returned strings will begin with the CPU metric name and end with the name identifier.  These strings can be
+    used to filter metrics::
+
+        >>> metric["name"].startswith(get_cpus()[0])
+
+    The list is sorted in ascending order.
+
+    """
+    cpus = list({m["name"].rpartition("cpu")[0] for m in metrics})
+    cpus.sort()
+    return cpus

@@ -704,6 +704,12 @@ class MetricTestCase(unittest.TestCase):
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
         self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
 
+    def test_get_cpus(self):
+        unsorted_metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
+        actual = collectd.get_cpus(unsorted_metrics)
+        expected = ['cpu`0`', 'cpu`1`']
+        self.assertEqual(expected, actual)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
