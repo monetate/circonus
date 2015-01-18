@@ -59,8 +59,9 @@ def get_cpu_metrics(metrics):
     #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
 
     """
-    cpus = OrderedDict.fromkeys(get_cpus(metrics))
+    cpus = get_cpus(metrics)
+    cpu_metrics = OrderedDict.fromkeys(cpus)
     for cpu in cpus:
-        cpus[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
-                                                 CPU_METRIC_SUFFIXES)
-    return list(chain.from_iterable(cpus.values()))
+        cpu_metrics[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
+                                                        CPU_METRIC_SUFFIXES)
+    return list(chain.from_iterable(cpu_metrics.values()))
