@@ -699,8 +699,8 @@ class MetricTestCase(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_get_metrics_sorted_by_suffix(self):
-        unordered_metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
-        sorted_metrics = metric.get_metrics_sorted_by_suffix(unordered_metrics, collectd.CPU_METRIC_SUFFIXES)
+        unsorted_metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
+        sorted_metrics = metric.get_metrics_sorted_by_suffix(unsorted_metrics, collectd.CPU_METRIC_SUFFIXES)
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
         self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
 
