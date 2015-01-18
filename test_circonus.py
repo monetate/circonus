@@ -679,7 +679,22 @@ class MetricTestCase(unittest.TestCase):
                             "type": "collectd"}
 
     def test_get_unordered_metrics(self):
-        expected = [m for m in self.check_bundle["metrics"] if collectd.CPU_METRIC_RE.match(m["name"])]
+        expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
         actual = metric.get_unordered_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
         self.assertEqual(expected, actual)
 
