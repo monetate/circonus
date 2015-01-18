@@ -704,9 +704,30 @@ class MetricTestCase(unittest.TestCase):
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
         self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
 
+
+class CollectdTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.metrics = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
+
     def test_get_cpus(self):
-        unsorted_metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
-        actual = collectd.get_cpus(unsorted_metrics)
+        actual = collectd.get_cpus(self.metrics)
         expected = ['cpu`0`', 'cpu`1`']
         self.assertEqual(expected, actual)
 
