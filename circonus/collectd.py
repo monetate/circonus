@@ -28,6 +28,13 @@ CPU_METRIC_RE = re.compile(r"""
 """, re.X)
 """A compiled regular expression which matches collectd CPU metrics."""
 
+CPU_NUMBER_RE = re.compile(r"""
+^cpu                            # Starts with "cpu"
+`                               # Delimiter
+(?P<number>\d+)                 # Number
+`                               # Delimiter
+""", re.X)
+"""A compiled regular expression which captures CPU number from the CPU metric."""
 
 def get_cpus(metrics):
     """Get a list of strings representing the CPUs available in ``metrics``.
@@ -65,3 +72,21 @@ def get_cpu_metrics(metrics):
         cpu_metrics[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
                                                         CPU_METRIC_SUFFIXES)
     return list(chain.from_iterable(cpu_metrics.values()))
+
+
+def get_stacked_cpu_metrics(metrics, hide_idle=True):
+    """Add a ``stack`` attribute to ``metrics``.
+
+    :param list metrics: The metrics to stack.
+    :param bool hide_idle: (optional) Hide CPU idle.
+
+    Each CPU will be added to a stack group equal to that CPU's number.
+
+    """
+    stacked_metrics = list(metrics)
+    for m in stacked_metrics:
+        match = CPU_NUMBER_RE.match(m["name"])
+        m["stack"] = int(match.group("number"))
+        if not hide_idle and m["name"].endswith("idle"):
+            m["hidden"] = True
+    return stacked_metrics
