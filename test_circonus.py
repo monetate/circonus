@@ -678,7 +678,7 @@ class MetricTestCase(unittest.TestCase):
                             "timeout": 59,
                             "type": "collectd"}
 
-    def test_get_unordered_metrics(self):
+    def test_get_metrics(self):
         expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
@@ -695,11 +695,11 @@ class MetricTestCase(unittest.TestCase):
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
-        actual = metric.get_unordered_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
+        actual = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
         self.assertEqual(expected, actual)
 
     def test_get_metrics_sorted_by_suffix(self):
-        unordered_metrics = metric.get_unordered_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
+        unordered_metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
         sorted_metrics = metric.get_metrics_sorted_by_suffix(unordered_metrics, collectd.CPU_METRIC_SUFFIXES)
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
         self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)

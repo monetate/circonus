@@ -10,10 +10,10 @@ Manipulate check metrics.
 from collections import OrderedDict
 
 
-def get_unordered_metrics(check_bundle, metric_re):
-    """Get an unordered list of metrics from ``check_bundle``.
+def get_metrics(check_bundle, metric_re):
+    """Get a list of metrics from ``check_bundle``.
 
-    :param dict check_bundle: Check bundle of metrics.
+    :param dict check_bundle: A check bundle with metrics.
     :param re metric_re: Regular expression matching metrics to return.
     :rtype: :py:class:`list`
 
