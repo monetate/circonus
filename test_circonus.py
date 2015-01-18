@@ -727,8 +727,28 @@ class CollectdTestCase(unittest.TestCase):
                        {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
 
     def test_get_cpus(self):
-        actual = collectd.get_cpus(self.metrics)
         expected = ['cpu`0`', 'cpu`1`']
+        actual = collectd.get_cpus(self.metrics)
+        self.assertEqual(expected, actual)
+
+    def test_get_cpu_metrics(self):
+        expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'}]
+        actual = collectd.get_cpu_metrics(self.metrics)
         self.assertEqual(expected, actual)
 
 

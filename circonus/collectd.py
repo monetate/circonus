@@ -7,7 +7,13 @@ Turn check bundles into graphs and worksheets.
 
 """
 
+from collections import OrderedDict
+from itertools import chain
+
 import re
+
+from circonus.metric import get_metrics_sorted_by_suffix
+
 
 CPU_METRIC_SUFFIXES = ["steal", "interrupt", "softirq", "system", "wait", "user", "nice", "idle"]
 """Ordered list of CPU metric suffixes.
@@ -40,3 +46,21 @@ def get_cpus(metrics):
     cpus = list({m["name"].rpartition("cpu")[0] for m in metrics})
     cpus.sort()
     return cpus
+
+
+def get_cpu_metrics(metrics):
+    """Get a sorted list of CPU metrics from ``metrics``.
+
+    :param list metrics: The metrics to sort.
+
+    The CPU metrics are sorted by:
+
+    #. Name, ascending
+    #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
+
+    """
+    cpus = OrderedDict.fromkeys(get_cpus(metrics))
+    for cpu in cpus:
+        cpus[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
+                                                 CPU_METRIC_SUFFIXES)
+    return list(chain.from_iterable(cpus.values()))
