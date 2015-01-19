@@ -80,7 +80,7 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
     :param list metrics: The metrics to stack.
     :param bool hide_idle: (optional) Hide CPU idle.
 
-    Each CPU will be added to a stack group equal to that CPU's number.
+    Each CPU will be added to a stack group equal to that CPU's number.  CPU idle metrics are hidden by default.
 
     """
     stacked_metrics = list(metrics)
