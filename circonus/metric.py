@@ -9,6 +9,8 @@ Manipulate check metrics.
 
 from collections import OrderedDict
 
+from circonus.util import colors
+
 
 def get_metrics(check_bundle, metric_re):
     """Get a list of metrics from ``check_bundle``.
@@ -40,3 +42,34 @@ def get_metrics_sorted_by_suffix(metrics, suffixes):
                 metrics_map[s] = m
                 break
     return metrics_map.values()
+
+
+def get_datapoints(check_id, metrics, custom=None):
+    """Get a list of datapoints for ``check_id`` from ``metrics``.
+
+    :param str check_id: The check id.
+    :param list metrics: The metrics.
+    :param dict custom: (optional) The custom datapoint attributes used to update each datapoint.
+    :rtype: :py:class:`list`
+
+    """
+    if custom is None:
+        custom = {}
+
+    c = colors(metrics)
+    datapoints = []
+    for m in metrics:
+        dp = {"alpha": m.get("alpha"),
+              "axis": "l",
+              "check_id": check_id,
+              "color": c.next().get_hex_l(),
+              "data_formula": m.get("data_formula"),
+              "hidden": m.get("hidden", False),
+              "legend_formula": m.get("legend_formula"),
+              "metric_name": m.get("name"),
+              "metric_type": m.get("type"),
+              "name": m.get("name"),
+              "stack": m.get("stack")}
+        dp.update(custom)
+        datapoints.append(dp)
+    return datapoints

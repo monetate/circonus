@@ -719,6 +719,19 @@ class MetricTestCase(unittest.TestCase):
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
         self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
 
+    def test_get_datapoints(self):
+        metrics = metric.get_metrics(self.check_bundle, collectd.CPU_METRIC_RE)
+        check_id = util.get_check_id_from_cid(self.check_bundle["_cid"])
+        datapoints = metric.get_datapoints(check_id, metrics)
+        for dp in datapoints:
+            self.assertIn("color", dp)
+            self.assertIsInstance(dp["color"], types.StringType)
+
+        datapoints = metric.get_datapoints(check_id, metrics, {"custom": "attribute"})
+        for dp in datapoints:
+            self.assertIn("custom", dp)
+            self.assertEqual("attribute", dp["custom"])
+
 
 class CollectdTestCase(unittest.TestCase):
 
