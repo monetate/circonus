@@ -743,7 +743,7 @@ class CollectdTestCase(unittest.TestCase):
 
     def test_get_cpus(self):
         expected = ['cpu`0`', 'cpu`1`']
-        actual = collectd.get_cpus(self.metrics)
+        actual = collectd._get_cpus(self.metrics)
         self.assertEqual(expected, actual)
 
     def test_get_cpu_metrics(self):

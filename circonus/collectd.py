@@ -36,18 +36,13 @@ CPU_NUMBER_RE = re.compile(r"""
 """, re.X)
 """A compiled regular expression which captures CPU number from the CPU metric."""
 
-def get_cpus(metrics):
+def _get_cpus(metrics):
     """Get a list of strings representing the CPUs available in ``metrics``.
 
     :param list metrics: The metrics used to look for CPUs.
     :rtype: :py:class:`list`
 
-    The returned strings will begin with the CPU metric name and end with the name identifier.  These strings can be
-    used to filter metrics::
-
-        >>> metric["name"].startswith(get_cpus()[0])
-
-    The list is sorted in ascending order.
+    The returned strings will begin with the CPU metric name. The list is sorted in ascending order.
 
     """
     cpus = list({m["name"].rpartition("cpu")[0] for m in metrics})
@@ -66,7 +61,7 @@ def get_cpu_metrics(metrics):
     #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
 
     """
-    cpus = get_cpus(metrics)
+    cpus = _get_cpus(metrics)
     cpu_metrics = OrderedDict.fromkeys(cpus)
     for cpu in cpus:
         cpu_metrics[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
