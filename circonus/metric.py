@@ -52,6 +52,11 @@ def get_datapoints(check_id, metrics, custom=None):
     :param dict custom: (optional) The custom datapoint attributes used to update each datapoint.
     :rtype: :py:class:`list`
 
+    Datapoints determine how ``metrics`` are rendered on a `graph
+    <https://login.circonus.com/resources/api/calls/graph>`_.  This function merges values from metrics with a few
+    default values of required datapoint attributes.  Datapoint attributes can be overridden with the ``custom``
+    parameter.  The ``custom`` :py:class:`dict` is used to :py:meth:`~dict.update` each datapoint as it is created.
+
     """
     if custom is None:
         custom = {}
