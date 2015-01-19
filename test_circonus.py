@@ -7,8 +7,10 @@ from time import sleep
 from uuid import uuid4
 
 import json
+import types
 import unittest
 
+from colour import Color
 from circonus import CirconusClient, collectd, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
@@ -289,6 +291,19 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(expected, util.get_check_id_from_cid(cid))
         cid = "check_bundle/%d/" % expected
         self.assertEqual(expected, util.get_check_id_from_cid(cid))
+
+    def test_get_colors(self):
+        items = ["one"]
+        self.assertIsInstance(util.get_colors(items), types.GeneratorType)
+
+        expected = [Color("red")]
+        actual = list(util.get_colors(items))
+        self.assertEqual(expected, actual)
+
+        items = ["one", "two"]
+        expected = [Color("red"), Color("green")]
+        actual = list(util.get_colors(items))
+        self.assertEqual(expected, actual)
 
 
 class TagTestCase(unittest.TestCase):
