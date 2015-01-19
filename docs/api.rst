@@ -52,6 +52,9 @@ Modules
 .. automodule:: circonus.collectd
    :members:
 
+.. automodule:: circonus.graph
+   :members:
+
 .. automodule:: circonus.metric
    :members:
 

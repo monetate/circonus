@@ -11,7 +11,7 @@ import types
 import unittest
 
 from colour import Color
-from circonus import CirconusClient, collectd, metric, tag, util
+from circonus import CirconusClient, collectd, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
 from mock import patch, MagicMock
@@ -791,6 +791,25 @@ class CollectdTestCase(unittest.TestCase):
             if m["name"].endswith("idle"):
                 self.assertTrue(m["hidden"])
         self.assertNotEqual(self.metrics, stacked_metrics)
+
+
+class GraphTestCase(unittest.TestCase):
+
+    def test_get_graph_data(self):
+        metrics = collectd.get_stacked_cpu_metrics(collectd.get_cpu_metrics(metric.get_metrics(check_bundle,
+                                                                                               collectd.CPU_METRIC_RE)))
+        check_id = util.get_check_id_from_cid(check_bundle["_cid"])
+        actual = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics))
+        self.assertIn("tags", actual)
+        self.assertEqual(["telemetry:collectd"], actual["tags"])
+        self.assertIn("datapoints", actual)
+        self.assertIsInstance(actual["datapoints"], types.ListType)
+
+        custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+        actual = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics), custom_data)
+        self.assertIn("title", actual)
+        self.assertEqual(custom_data["title"], actual["title"])
+        self.assertEqual(custom_data["max_left_y"], actual["max_left_y"])
 
 
 if __name__ == "__main__":
