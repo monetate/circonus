@@ -14,6 +14,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
+from circonus.collectd import get_cpu_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
@@ -223,3 +224,18 @@ class CirconusClient(object):
         a.stop = a.start if stop is None else stop
         a.create()
         return a
+
+    def create_collectd_cpu_graph(self, target):
+        """Create a CPU graph from a collectd check bundle for ``target``.
+
+        :param str target: The target of the check bundle to filter for.
+        :rtype: :class:`requests.Response`
+
+        ``target`` is used to filter ``collectd`` check bundles.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        data = get_cpu_graph_data(check_bundle)
+        return self.create("graph", data)

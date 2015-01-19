@@ -447,6 +447,34 @@ class CirconusClientTestCase(unittest.TestCase):
             data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
             put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
+    @responses.activate
+    def test_create_collectd_cpu_graph(self):
+        target = "10.0.0.1"
+        check_bundle = {"status": "active",
+                        "_last_modified_by": "/user/1234",
+                        "display_name": "%s collectd" % target,
+                        "target": target,
+                        "tags": ["telemetry:collectd"],
+                        "type": "collectd",
+                        "notes": None,
+                        "period": 60,
+                        "metrics": [],
+                        "brokers": ["/broker/123"],
+                        "timeout": 59,
+                        "_cid": "/check_bundle/12345",
+                        "_created": 1413988231,
+                        "_checks": ["/check/12345"],
+                        "config": {"asynch_metrics": "false",
+                                   "submission_target": "10.0.0.2:25826",
+                                   "security_level": "0"},
+                        "_last_modified": 1416618604}
+        data = {"title": "10.0.0.1 cpu", "tags": ["telemetry:collectd"], "max_left_y": 100, "datapoints": []}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            self.c.create_collectd_cpu_graph(target)
+            post_patch.assert_called_with(get_api_url("graph"), headers=self.c.api_headers, data=json.dumps(data))
+
 
 class AnnotationTestCase(unittest.TestCase):
 
