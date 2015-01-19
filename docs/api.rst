@@ -55,6 +55,9 @@ Modules
 .. automodule:: circonus.metric
    :members:
 
+.. automodule:: circonus.util
+   :members:
+
 .. _Circonus REST API: https://login.circonus.com/resources/api
 .. _JSON: http://json.org/
 .. _error: https://login.circonus.com/resources/api#errors
