@@ -71,10 +71,11 @@ def get_cpu_metrics(metrics):
 
 
 def get_stacked_cpu_metrics(metrics, hide_idle=True):
-    """Add a ``stack`` attribute to ``metrics``.
+    """Get CPU metrics with the ``stack`` attribute added.
 
     :param list metrics: The metrics to stack.
     :param bool hide_idle: (optional) Hide CPU idle.
+    :rtype: :py:class:`list`
 
     Each CPU will be added to a stack group equal to that CPU's number.  CPU idle metrics are hidden by default.
 
