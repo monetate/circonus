@@ -88,7 +88,7 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
     for m in stacked_metrics:
         match = CPU_NUMBER_RE.match(m["name"])
         m["stack"] = int(match.group("number"))
-        if not hide_idle and m["name"].endswith("idle"):
+        if hide_idle and m["name"].endswith("idle"):
             m["hidden"] = True
     return stacked_metrics
 

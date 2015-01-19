@@ -782,14 +782,14 @@ class CollectdTestCase(unittest.TestCase):
         stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
-            self.assertNotIn("hidden", m)
+            if m["name"].endswith("idle"):
+                self.assertTrue(m["hidden"])
         self.assertNotEqual(self.metrics, stacked_metrics)
 
         stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics, hide_idle=False)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
-            if m["name"].endswith("idle"):
-                self.assertTrue(m["hidden"])
+            self.assertNotIn("hidden", m)
         self.assertNotEqual(self.metrics, stacked_metrics)
 
 
