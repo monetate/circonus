@@ -1,6 +1,16 @@
 Release History
 ---------------
 
+0.0.7 (2015-01-19)
+++++++++++++++++++
+
+**Improvements**
+
+- Add initial support for collectd
+- Add graph module
+- Add metric module
+- Add API documentation
+
 0.0.6 (2015-01-16)
 ++++++++++++++++++
 
