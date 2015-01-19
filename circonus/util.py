@@ -29,7 +29,7 @@ def get_resource_from_cid(cid):
     return cid.strip(pathsep).split(pathsep)[0]
 
 
-def get_colors(items):
+def colors(items):
     """Create a generator which returns colors for each item in ``items``.
 
     :param list items: The list to generate colors for.

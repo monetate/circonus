@@ -292,17 +292,17 @@ class UtilTestCase(unittest.TestCase):
         cid = "check_bundle/%d/" % expected
         self.assertEqual(expected, util.get_check_id_from_cid(cid))
 
-    def test_get_colors(self):
+    def test_colors(self):
         items = ["one"]
-        self.assertIsInstance(util.get_colors(items), types.GeneratorType)
+        self.assertIsInstance(util.colors(items), types.GeneratorType)
 
         expected = [Color("red")]
-        actual = list(util.get_colors(items))
+        actual = list(util.colors(items))
         self.assertEqual(expected, actual)
 
         items = ["one", "two"]
         expected = [Color("red"), Color("green")]
-        actual = list(util.get_colors(items))
+        actual = list(util.colors(items))
         self.assertEqual(expected, actual)
 
 
