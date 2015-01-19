@@ -8,6 +8,7 @@ Turn `collectd <http://collectd.org/>`_  check bundles into graphs and worksheet
 """
 
 from collections import OrderedDict
+from copy import deepcopy
 from itertools import chain
 
 import re
@@ -80,7 +81,7 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
     Each CPU will be added to a stack group equal to that CPU's number.  CPU idle metrics are hidden by default.
 
     """
-    stacked_metrics = list(metrics)
+    stacked_metrics = deepcopy(metrics)
     for m in stacked_metrics:
         match = CPU_NUMBER_RE.match(m["name"])
         m["stack"] = int(match.group("number"))
