@@ -36,6 +36,7 @@ CPU_NUMBER_RE = re.compile(r"""
 """, re.X)
 """A compiled regular expression which captures CPU number from the CPU metric."""
 
+
 def _get_cpus(metrics):
     """Get a list of strings representing the CPUs available in ``metrics``.
 
