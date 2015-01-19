@@ -3,7 +3,7 @@
 circonus.collectd
 ~~~~~~~~~~~~~~~~~
 
-Turn check bundles into graphs and worksheets.
+Turn `collectd <http://collectd.org/>`_  check bundles into graphs and worksheets.
 
 """
 
