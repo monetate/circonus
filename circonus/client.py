@@ -168,7 +168,10 @@ class CirconusClient(object):
 
         :param str cid: The resource to update.
         :param list new_tags: The :py:class:`str` tags to add to the resource.
-        :rtype: :class:`requests.Response`
+        :rtype: :class:`requests.Response` or :py:const:`False`
+
+        :py:const:`False` is returned in instances where a request to update the resource was not necessary because
+        the resource is already tagged with ``new_tags``.
 
         """
         r = False
