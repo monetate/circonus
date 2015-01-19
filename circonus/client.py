@@ -201,7 +201,7 @@ class CirconusClient(object):
         :param str title: The title.
         :param str category: The category.
         :param datetime.datetime start: (optional) The start time.
-        :param datetime.datetime  stop: (optional) The stop time.
+        :param datetime.datetime stop: (optional) The stop time.
         :param str description: (optional) The description.
         :param list rel_metrics: (optional) The :py:class:`str` names of metrics related to this annotation.
         :rtype: :class:`~circonus.annotation.Annotation`
