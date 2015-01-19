@@ -793,23 +793,34 @@ class CollectdTestCase(unittest.TestCase):
         self.assertNotEqual(self.metrics, stacked_metrics)
 
 
+    def test_get_cpu_graph_data(self):
+        data = collectd.get_cpu_graph_data(check_bundle)
+        self.assertIn("tags", data)
+        self.assertEqual(["telemetry:collectd"], data["tags"])
+        self.assertIn("datapoints", data)
+        self.assertIsInstance(data["datapoints"], types.ListType)
+        self.assertIn("title", data)
+        self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
+        self.assertEqual(100, data["max_left_y"])
+
+
 class GraphTestCase(unittest.TestCase):
 
     def test_get_graph_data(self):
         metrics = collectd.get_stacked_cpu_metrics(collectd.get_cpu_metrics(metric.get_metrics(check_bundle,
                                                                                                collectd.CPU_METRIC_RE)))
         check_id = util.get_check_id_from_cid(check_bundle["_cid"])
-        actual = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics))
-        self.assertIn("tags", actual)
-        self.assertEqual(["telemetry:collectd"], actual["tags"])
-        self.assertIn("datapoints", actual)
-        self.assertIsInstance(actual["datapoints"], types.ListType)
+        data = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics))
+        self.assertIn("tags", data)
+        self.assertEqual(["telemetry:collectd"], data["tags"])
+        self.assertIn("datapoints", data)
+        self.assertIsInstance(data["datapoints"], types.ListType)
 
         custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
-        actual = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics), custom_data)
-        self.assertIn("title", actual)
-        self.assertEqual(custom_data["title"], actual["title"])
-        self.assertEqual(custom_data["max_left_y"], actual["max_left_y"])
+        data = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics), custom_data)
+        self.assertIn("title", data)
+        self.assertEqual(custom_data["title"], data["title"])
+        self.assertEqual(custom_data["max_left_y"], data["max_left_y"])
 
 
 if __name__ == "__main__":

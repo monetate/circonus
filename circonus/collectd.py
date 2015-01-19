@@ -13,7 +13,9 @@ from itertools import chain
 
 import re
 
-from circonus.metric import get_metrics_sorted_by_suffix
+from circonus.graph import get_graph_data
+from circonus.metric import get_datapoints, get_metrics, get_metrics_sorted_by_suffix
+from circonus.util import get_check_id_from_cid
 
 
 CPU_METRIC_SUFFIXES = ["steal", "interrupt", "softirq", "system", "wait", "user", "nice", "idle"]
@@ -89,3 +91,22 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
         if not hide_idle and m["name"].endswith("idle"):
             m["hidden"] = True
     return stacked_metrics
+
+
+def get_cpu_graph_data(check_bundle):
+    """Get CPU graph data for ``check_bundle``.
+
+    :param dict check_bundle: The check bundle to create graph data with.
+    :rtype: :py:class:`dict`
+
+    The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
+    <https://login.circonus.com/resources/api/calls/graph>`_.
+
+    """
+    metrics = get_stacked_cpu_metrics(get_cpu_metrics(get_metrics(check_bundle, CPU_METRIC_RE)))
+    datapoints = []
+    for cid in check_bundle["_checks"]:
+        check_id = get_check_id_from_cid(cid)
+        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "counter"}))
+    custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+    return get_graph_data(check_bundle, datapoints, custom_data)
