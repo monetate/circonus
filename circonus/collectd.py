@@ -79,6 +79,7 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
     :rtype: :py:class:`list`
 
     Each CPU will be added to a stack group equal to that CPU's number.  CPU idle metrics are hidden by default.
+    ``metrics`` is not modified by this function.
 
     """
     stacked_metrics = deepcopy(metrics)
