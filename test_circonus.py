@@ -7,15 +7,256 @@ from time import sleep
 from uuid import uuid4
 
 import json
+import types
 import unittest
 
-from circonus import CirconusClient, tag, util
+from colour import Color
+from circonus import CirconusClient, collectd, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
 import responses
+
+
+check_bundle = {"_checks": ["/check/123456"],
+                "_cid": "/check_bundle/12345",
+                "_created": 1417807923,
+                "_last_modified": 1417807952,
+                "_last_modified_by": "/user/1234",
+                "brokers": ["/broker/123"],
+                "config": {"asynch_metrics": "false",
+                           "security_level": "0",
+                           "submission_target": "10.0.0.2:25826"},
+                "display_name": "10.0.0.1 collectd",
+                "metrics": [{"name": "interface`eth0`if_packets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdj`disk_octets`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`eth0`if_octets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`lo`if_errors`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`1`cpu`idle", "status": "active", "type": "numeric"},
+                            {"name": "cpu`1`cpu`user", "status": "active", "type": "numeric"},
+                            {"name": "load`load`1min", "status": "active", "type": "numeric"},
+                            {"name": "df`mnt`df_complex`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`eth0`if_octets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_octets`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`0`cpu`steal", "status": "active", "type": "numeric"},
+                            {"name": "cpu`1`cpu`interrupt", "status": "active", "type": "numeric"},
+                            {"name": "swap`swap_io`in", "status": "active", "type": "numeric"},
+                            {"name": "df`root`df_complex`reserved",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`lo`if_packets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_time`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "load`load`15min", "status": "active", "type": "numeric"},
+                            {"name": "cpu`0`cpu`idle", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdb`disk_ops`1", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdk`disk_ops`0", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdj`disk_ops`1", "status": "active", "type": "numeric"},
+                            {"name": "disk`sda1`disk_ops`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "swap`swap_io`out", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdb`disk_merged`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdj`disk_ops`0", "status": "active", "type": "numeric"},
+                            {"name": "cpu`0`cpu`wait", "status": "active", "type": "numeric"},
+                            {"name": "interface`eth0`if_errors`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`dev-shm`df_complex`used",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_merged`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_time`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`1`cpu`steal", "status": "active", "type": "numeric"},
+                            {"name": "interface`sit0`if_octets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_time`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_merged`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`lo`if_octets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "memory`memory`buffered",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdb`disk_octets`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`sit0`if_octets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdb`disk_merged`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`eth0`if_packets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_time`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_octets`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`sit0`if_errors`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_merged`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`1`cpu`nice", "status": "active", "type": "numeric"},
+                            {"name": "disk`dm-0`disk_octets`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt`df_complex`reserved",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdb`disk_octets`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`1`cpu`system", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdj`disk_octets`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_time`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_time`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`lo`if_octets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`0`cpu`softirq", "status": "active", "type": "numeric"},
+                            {"name": "df`root`df_complex`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`root`df_complex`used",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdb`disk_time`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_octets`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_octets`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`dm-0`disk_ops`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_merged`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`sit0`if_errors`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "memory`memory`free", "status": "active", "type": "numeric"},
+                            {"name": "cpu`0`cpu`nice", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdb`disk_time`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`dev-shm`df_complex`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdb`disk_ops`0", "status": "active", "type": "numeric"},
+                            {"name": "interface`sit0`if_packets`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_octets`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdj`disk_merged`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`1`cpu`softirq", "status": "active", "type": "numeric"},
+                            {"name": "disk`dm-0`disk_ops`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdj`disk_merged`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdj`disk_time`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`0`cpu`user", "status": "active", "type": "numeric"},
+                            {"name": "disk`sdj`disk_time`1",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`dev-shm`df_complex`reserved",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "interface`sit0`if_packets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "memory`memory`cached",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sda1`disk_merged`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "load`load`5min", "status": "active", "type": "numeric"},
+                            {"name": "interface`lo`if_packets`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt`df_complex`used",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`0`cpu`system", "status": "active", "type": "numeric"},
+                            {"name": "interface`eth0`if_errors`tx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_ops`1", "status": "active", "type": "numeric"},
+                            {"name": "cpu`1`cpu`wait", "status": "active", "type": "numeric"},
+                            {"name": "interface`lo`if_errors`rx",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "memory`memory`used", "status": "active", "type": "numeric"},
+                            {"name": "disk`sda1`disk_ops`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "disk`sdk`disk_merged`0",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "cpu`0`cpu`interrupt",
+                             "status": "active",
+                             "type": "numeric"}],
+                "notes": None,
+                "period": 60,
+                "status": "active",
+                "tags": [],
+                "target": "10.0.0.1",
+                "timeout": 59,
+                "type": "collectd"}
 
 
 class CirconusClientTestCase(unittest.TestCase):
@@ -206,6 +447,34 @@ class CirconusClientTestCase(unittest.TestCase):
             data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
             put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
+    @responses.activate
+    def test_create_collectd_cpu_graph(self):
+        target = "10.0.0.1"
+        check_bundle = {"status": "active",
+                        "_last_modified_by": "/user/1234",
+                        "display_name": "%s collectd" % target,
+                        "target": target,
+                        "tags": ["telemetry:collectd"],
+                        "type": "collectd",
+                        "notes": None,
+                        "period": 60,
+                        "metrics": [],
+                        "brokers": ["/broker/123"],
+                        "timeout": 59,
+                        "_cid": "/check_bundle/12345",
+                        "_created": 1413988231,
+                        "_checks": ["/check/12345"],
+                        "config": {"asynch_metrics": "false",
+                                   "submission_target": "10.0.0.2:25826",
+                                   "security_level": "0"},
+                        "_last_modified": 1416618604}
+        data = {"title": "10.0.0.1 cpu", "tags": ["telemetry:collectd"], "max_left_y": 100, "datapoints": []}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            self.c.create_collectd_cpu_graph(target)
+            post_patch.assert_called_with(get_api_url("graph"), headers=self.c.api_headers, data=json.dumps(data))
+
 
 class AnnotationTestCase(unittest.TestCase):
 
@@ -289,6 +558,19 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(expected, util.get_check_id_from_cid(cid))
         cid = "check_bundle/%d/" % expected
         self.assertEqual(expected, util.get_check_id_from_cid(cid))
+
+    def test_colors(self):
+        items = ["one"]
+        self.assertIsInstance(util.colors(items), types.GeneratorType)
+
+        expected = [Color("red")]
+        actual = list(util.colors(items))
+        self.assertEqual(expected, actual)
+
+        items = ["one", "two"]
+        expected = [Color("red"), Color("green")]
+        actual = list(util.colors(items))
+        self.assertEqual(expected, actual)
 
 
 class TagTestCase(unittest.TestCase):
@@ -434,6 +716,139 @@ class TagTestCase(unittest.TestCase):
         self.assertIsNone(tag.get_tags_without({}, tags))
         self.assertIsNone(tag.get_tags_without({}, []))
         self.assertIsNone(tag.get_tags_without({}, ["test:new"]))
+
+
+class MetricTestCase(unittest.TestCase):
+
+    def test_get_metrics(self):
+        expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
+        actual = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
+        self.assertEqual(expected, actual)
+
+    def test_get_metrics_sorted_by_suffix(self):
+        unsorted_metrics = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
+        sorted_metrics = metric.get_metrics_sorted_by_suffix(unsorted_metrics, collectd.CPU_METRIC_SUFFIXES)
+        actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
+        self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
+
+    def test_get_datapoints(self):
+        metrics = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
+        check_id = util.get_check_id_from_cid(check_bundle["_cid"])
+        datapoints = metric.get_datapoints(check_id, metrics)
+        for dp in datapoints:
+            self.assertIn("color", dp)
+            self.assertIsInstance(dp["color"], types.StringType)
+
+        datapoints = metric.get_datapoints(check_id, metrics, {"custom": "attribute"})
+        for dp in datapoints:
+            self.assertIn("custom", dp)
+            self.assertEqual("attribute", dp["custom"])
+
+
+class CollectdTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.metrics = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                       {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
+
+    def test_get_cpus(self):
+        expected = ['cpu`0`', 'cpu`1`']
+        actual = collectd._get_cpus(self.metrics)
+        self.assertEqual(expected, actual)
+
+    def test_get_cpu_metrics(self):
+        expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'}]
+        actual = collectd.get_cpu_metrics(self.metrics)
+        self.assertEqual(expected, actual)
+
+    def test_get_stacked_cpu_metrics(self):
+        stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics)
+        for m in stacked_metrics:
+            self.assertIn(str(m["stack"]), m["name"])
+            if m["name"].endswith("idle"):
+                self.assertTrue(m["hidden"])
+        self.assertNotEqual(self.metrics, stacked_metrics)
+
+        stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics, hide_idle=False)
+        for m in stacked_metrics:
+            self.assertIn(str(m["stack"]), m["name"])
+            self.assertNotIn("hidden", m)
+        self.assertNotEqual(self.metrics, stacked_metrics)
+
+
+    def test_get_cpu_graph_data(self):
+        data = collectd.get_cpu_graph_data(check_bundle)
+        self.assertIn("tags", data)
+        self.assertEqual(["telemetry:collectd"], data["tags"])
+        self.assertIn("datapoints", data)
+        self.assertIsInstance(data["datapoints"], types.ListType)
+        self.assertIn("title", data)
+        self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
+        self.assertEqual(100, data["max_left_y"])
+
+
+class GraphTestCase(unittest.TestCase):
+
+    def test_get_graph_data(self):
+        metrics = collectd.get_stacked_cpu_metrics(collectd.get_cpu_metrics(metric.get_metrics(check_bundle,
+                                                                                               collectd.CPU_METRIC_RE)))
+        check_id = util.get_check_id_from_cid(check_bundle["_cid"])
+        data = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics))
+        self.assertIn("tags", data)
+        self.assertEqual(["telemetry:collectd"], data["tags"])
+        self.assertIn("datapoints", data)
+        self.assertIsInstance(data["datapoints"], types.ListType)
+
+        custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+        data = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics), custom_data)
+        self.assertIn("title", data)
+        self.assertEqual(custom_data["title"], data["title"])
+        self.assertEqual(custom_data["max_left_y"], data["max_left_y"])
 
 
 if __name__ == "__main__":

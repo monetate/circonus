@@ -1,3 +1,4 @@
+colour==0.0.6
 coverage==3.7.1
 mock==1.0.1
 requests==2.5.1

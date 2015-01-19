@@ -1,0 +1,112 @@
+"""
+
+circonus.collectd
+~~~~~~~~~~~~~~~~~
+
+Turn `collectd <http://collectd.org/>`_  check bundles into graphs and worksheets.
+
+"""
+
+from collections import OrderedDict
+from copy import deepcopy
+from itertools import chain
+
+import re
+
+from circonus.graph import get_graph_data
+from circonus.metric import get_datapoints, get_metrics, get_metrics_sorted_by_suffix
+from circonus.util import get_check_id_from_cid
+
+
+CPU_METRIC_SUFFIXES = ["steal", "interrupt", "softirq", "system", "wait", "user", "nice", "idle"]
+"""Ordered list of CPU metric suffixes.
+
+This list is used to filter and sort CPU metrics in preparation for creating a CPU graph.
+
+"""
+
+CPU_METRIC_RE = re.compile(r"""
+^cpu                            # Starts with "cpu"
+`.*`                            # Anything in between
+""", re.X)
+"""A compiled regular expression which matches collectd CPU metrics."""
+
+CPU_NUMBER_RE = re.compile(r"""
+^cpu                            # Starts with "cpu"
+`                               # Delimiter
+(?P<number>\d+)                 # Number
+`                               # Delimiter
+""", re.X)
+"""A compiled regular expression which captures CPU number from the CPU metric."""
+
+
+def _get_cpus(metrics):
+    """Get a list of strings representing the CPUs available in ``metrics``.
+
+    :param list metrics: The metrics used to look for CPUs.
+    :rtype: :py:class:`list`
+
+    The returned strings will begin with the CPU metric name. The list is sorted in ascending order.
+
+    """
+    cpus = list({m["name"].rpartition("cpu")[0] for m in metrics})
+    cpus.sort()
+    return cpus
+
+
+def get_cpu_metrics(metrics):
+    """Get a sorted list of CPU metrics from ``metrics``.
+
+    :param list metrics: The metrics to sort.
+
+    The CPU metrics are sorted by:
+
+    #. Name, ascending
+    #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
+
+    """
+    cpus = _get_cpus(metrics)
+    cpu_metrics = OrderedDict.fromkeys(cpus)
+    for cpu in cpus:
+        cpu_metrics[cpu] = get_metrics_sorted_by_suffix((m for m in metrics if m["name"].startswith(cpu)),
+                                                        CPU_METRIC_SUFFIXES)
+    return list(chain.from_iterable(cpu_metrics.values()))
+
+
+def get_stacked_cpu_metrics(metrics, hide_idle=True):
+    """Get CPU metrics with the ``stack`` attribute added.
+
+    :param list metrics: The metrics to stack.
+    :param bool hide_idle: (optional) Hide CPU idle.
+    :rtype: :py:class:`list`
+
+    Each CPU will be added to a stack group equal to that CPU's number.  CPU idle metrics are hidden by default.
+    ``metrics`` is not modified by this function.
+
+    """
+    stacked_metrics = deepcopy(metrics)
+    for m in stacked_metrics:
+        match = CPU_NUMBER_RE.match(m["name"])
+        m["stack"] = int(match.group("number"))
+        if hide_idle and m["name"].endswith("idle"):
+            m["hidden"] = True
+    return stacked_metrics
+
+
+def get_cpu_graph_data(check_bundle):
+    """Get CPU graph data for ``check_bundle``.
+
+    :param dict check_bundle: The check bundle to create graph data with.
+    :rtype: :py:class:`dict`
+
+    The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
+    <https://login.circonus.com/resources/api/calls/graph>`_.
+
+    """
+    metrics = get_stacked_cpu_metrics(get_cpu_metrics(get_metrics(check_bundle, CPU_METRIC_RE)))
+    datapoints = []
+    for cid in check_bundle["_checks"]:
+        check_id = get_check_id_from_cid(cid)
+        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "counter"}))
+    custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+    return get_graph_data(check_bundle, datapoints, custom_data)

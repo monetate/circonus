@@ -29,5 +29,5 @@ setup(
     ],
     keywords="circonus monitoring analytics",
     packages=find_packages(),
-    install_requires=["requests"]
+    install_requires=["colour", "requests"]
 )

@@ -14,6 +14,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
+from circonus.collectd import get_cpu_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
@@ -168,7 +169,10 @@ class CirconusClient(object):
 
         :param str cid: The resource to update.
         :param list new_tags: The :py:class:`str` tags to add to the resource.
-        :rtype: :class:`requests.Response`
+        :rtype: :class:`requests.Response` or :py:const:`False`
+
+        :py:const:`False` is returned in instances where a request to update the resource was not necessary because
+        the resource is already tagged with ``new_tags``.
 
         """
         r = False
@@ -201,7 +205,7 @@ class CirconusClient(object):
         :param str title: The title.
         :param str category: The category.
         :param datetime.datetime start: (optional) The start time.
-        :param datetime.datetime  stop: (optional) The stop time.
+        :param datetime.datetime stop: (optional) The stop time.
         :param str description: (optional) The description.
         :param list rel_metrics: (optional) The :py:class:`str` names of metrics related to this annotation.
         :rtype: :class:`~circonus.annotation.Annotation`
@@ -220,3 +224,18 @@ class CirconusClient(object):
         a.stop = a.start if stop is None else stop
         a.create()
         return a
+
+    def create_collectd_cpu_graph(self, target):
+        """Create a CPU graph from a collectd check bundle for ``target``.
+
+        :param str target: The target of the check bundle to filter for.
+        :rtype: :class:`requests.Response`
+
+        ``target`` is used to filter ``collectd`` check bundles.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        data = get_cpu_graph_data(check_bundle)
+        return self.create("graph", data)
