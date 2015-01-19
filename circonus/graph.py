@@ -17,7 +17,8 @@ def get_graph_data(check_bundle, datapoints, custom_data=None):
     :param dict custom_data: (optional) The custom data to include in the graph data.
     :rtype: :py:class:`dict`
 
-    Merge common graph data with ``custom_data``.
+    Merge common graph data with ``custom_data``.  Add the telemetry tag based on the ``type`` attribute of
+    ``check_bundle``.
 
     """
     if custom_data is None:
