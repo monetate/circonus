@@ -58,6 +58,9 @@ Modules
 .. automodule:: circonus.metric
    :members:
 
+.. automodule:: circonus.tag
+   :members:
+
 .. automodule:: circonus.util
    :members:
 
