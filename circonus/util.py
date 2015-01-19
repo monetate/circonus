@@ -15,6 +15,7 @@ def get_check_id_from_cid(cid):
     """Get a check id integer from ``cid``.
 
     :param str cid: The check id.
+    :rtype: :py:class:`int`
 
     """
     return int(cid.strip(pathsep).rpartition(pathsep)[-1])
@@ -24,6 +25,7 @@ def get_resource_from_cid(cid):
     """Get the resource name from ``cid``.
 
     :param str cid: The check id.
+    :rtype: :py:class:`str`
 
     """
     return cid.strip(pathsep).split(pathsep)[0]
