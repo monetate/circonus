@@ -37,9 +37,9 @@ def colors(items):
 
     """
     if len(items) < 2:
-        colors = (c for c in (Color("red"),))
+        c = (c for c in (Color("red"),))
     else:
         color_from = Color("red")
         color_to = Color("green")
-        colors = (color_from.range_to(color_to, len(items)))
-    return colors
+        c = (color_from.range_to(color_to, len(items)))
+    return c
