@@ -1,6 +1,20 @@
 Release History
 ---------------
 
+0.0.8 (2015-01-20)
+++++++++++++++++++
+
+**Improvements**
+
+- Add collectd memory graph
+- Add API documentation
+
+**Bug fixes**
+- Fix key error when looking for metrics in a check bundle that has none.
+- Handle error state when sorting metrics.  If there were less metrics than
+  suffixes to sort by the returned list would contain ``None`` values.  Now an
+  empty list is returned.
+
 0.0.7 (2015-01-19)
 ++++++++++++++++++
 
