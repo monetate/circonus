@@ -13,9 +13,9 @@ from circonus.util import get_check_id_from_cid
 
 
 MEMORY_METRIC_SUFFIXES = ["used", "buffered", "cached", "free"]
-"""Ordered list of memory metric suffixes.
+"""Ordered list of metric suffixes.
 
-This list is used to filter and sort memory metrics in preparation for creating a memory graph.
+This list is used to filter and sort metrics in preparation for creating a graph.
 
 """
 
@@ -24,15 +24,15 @@ MEMORY_METRIC_RE = re.compile(r"""
 `.*`                            # Anything in between
 ({}|{}|{}|{})$                  # Ends with defined suffix
 """.format(*MEMORY_METRIC_SUFFIXES), re.X)
-"""A compiled regular expression which matches collectd memory metrics."""
+"""A compiled regular expression which matches ``collectd`` metrics."""
 
 
 def get_memory_metrics(metrics):
-    """Get a sorted list of memory metrics from ``metrics``.
+    """Get a sorted list of metrics from ``metrics``.
 
     :param list metrics: The metrics to sort.
 
-    The memory metrics are sorted by explicit suffix, i.e., :const:`~circonus.collectd.memory.MEMORY_METRIC_SUFFIXES`
+    The metrics are sorted by explicit suffix, i.e., :const:`~circonus.collectd.memory.MEMORY_METRIC_SUFFIXES`
 
     """
     return get_metrics_sorted_by_suffix(metrics, MEMORY_METRIC_SUFFIXES)
@@ -54,7 +54,7 @@ def get_memory_datapoints(check_bundle, metrics):
 
 
 def get_memory_graph_data(check_bundle):
-    """Get memory graph data for ``check_bundle``.
+    """Get graph data for ``check_bundle``.
 
     :param dict check_bundle: The check bundle to create graph data with.
     :rtype: :py:class:`dict`
