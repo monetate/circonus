@@ -15,6 +15,7 @@ import json
 
 from circonus.annotation import Annotation
 from circonus.collectd.cpu import get_cpu_graph_data
+from circonus.collectd.memory import get_memory_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
@@ -226,7 +227,7 @@ class CirconusClient(object):
         return a
 
     def create_collectd_cpu_graph(self, target):
-        """Create a CPU graph from a collectd check bundle for ``target``.
+        """Create a CPU graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
         :rtype: :class:`requests.Response`
@@ -239,3 +240,20 @@ class CirconusClient(object):
         check_bundle = r.json()[0]
         data = get_cpu_graph_data(check_bundle)
         return self.create("graph", data)
+
+    def create_collectd_memory_graph(self, target):
+        """Create a memory graph from a ``collectd`` check bundle for ``target``.
+
+        :param str target: The target of the check bundle to filter for.
+        :rtype: :class:`requests.Response` or :py:const:`None`
+
+        ``target`` is used to filter ``collectd`` check bundles.
+
+        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        data = get_memory_graph_data(check_bundle)
+        return self.create("graph", data) if data else None

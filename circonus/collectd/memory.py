@@ -27,12 +27,12 @@ MEMORY_METRIC_RE = re.compile(r"""
 """A compiled regular expression which matches ``collectd`` metrics."""
 
 
-def get_memory_metrics(metrics):
+def get_sorted_memory_metrics(metrics):
     """Get a sorted list of metrics from ``metrics``.
 
     :param list metrics: The metrics to sort.
 
-    The metrics are sorted by explicit suffix, i.e., :const:`~circonus.collectd.memory.MEMORY_METRIC_SUFFIXES`
+    The metrics are sorted by explicit suffix, i.e., :const:`~circonus.collectd.memory.MEMORY_METRIC_SUFFIXES`.
 
     """
     return get_metrics_sorted_by_suffix(metrics, MEMORY_METRIC_SUFFIXES)
@@ -63,7 +63,11 @@ def get_memory_graph_data(check_bundle):
     <https://login.circonus.com/resources/api/calls/graph>`_.
 
     """
-    metrics = get_memory_metrics(get_metrics(check_bundle, MEMORY_METRIC_RE))
-    datapoints = get_memory_datapoints(check_bundle, metrics)
-    custom_data = {"title": "%s memory" % check_bundle["target"], "min_left_y": 0, "min_right_y": 0}
-    return get_graph_data(check_bundle, datapoints, custom_data)
+    data = {}
+    memory_metrics = get_metrics(check_bundle, MEMORY_METRIC_RE)
+    if memory_metrics:
+        sorted_memory_metrics = get_sorted_memory_metrics(memory_metrics)
+        datapoints = get_memory_datapoints(check_bundle, sorted_memory_metrics)
+        custom_data = {"title": "%s memory" % check_bundle["target"], "min_left_y": 0, "min_right_y": 0}
+        data = get_graph_data(check_bundle, datapoints, custom_data)
+    return data

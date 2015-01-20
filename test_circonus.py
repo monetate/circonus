@@ -476,6 +476,58 @@ class CirconusClientTestCase(unittest.TestCase):
             self.c.create_collectd_cpu_graph(target)
             post_patch.assert_called_with(get_api_url("graph"), headers=self.c.api_headers, data=json.dumps(data))
 
+    @responses.activate
+    def test_create_collectd_memory_graph_no_memory_metrics(self):
+        target = "10.0.0.1"
+        cb = {"target": target, "type": "collectd"}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNone(self.c.create_collectd_memory_graph(target))
+            post_patch.assert_not_called()
+
+    @responses.activate
+    def test_create_collectd_memory_graph_too_few_metrics(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": [{"status": "active", "type": "numeric", "name": "memory`memory`cached"}]}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        expected = {"min_left_y": 0, "datapoints": [], "tags": ["telemetry:collectd"], "min_right_y": 0, "title": "10.0.0.1 memory"}
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(target))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual)
+
+    @responses.activate
+    def test_create_collectd_memory_graph(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": [{"status": "active", "type": "numeric", "name": "memory`memory`cached"},
+                          {"status": "active", "type": "numeric", "name": "memory`memory`free"},
+                          {"status": "active", "type": "numeric", "name": "memory`memory`used"},
+                          {"status": "active", "type": "numeric", "name": "memory`memory`buffered"}]}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        expected = {"min_left_y": 0,
+                    "datapoints": [{"color": "#ff0000", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name": "memory`memory`used", "data_formula": None, "metric_name": "memory`memory`used", "check_id": 12345, "hidden": False, "axis": "l"},
+                                   {"color": "#d58e00", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name": "memory`memory`buffered", "data_formula": None,"metric_name": "memory`memory`buffered", "check_id": 12345, "hidden": False, "axis": "l"},
+                                   {"color": "#72aa00", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name": "memory`memory`cached", "data_formula": None, "metric_name": "memory`memory`cached", "check_id": 12345, "hidden": False, "axis": "l"},
+                                   {"color": "#008000", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name":"memory`memory`free", "data_formula": None, "metric_name": "memory`memory`free", "check_id": 12345, "hidden": False, "axis": "l"}],
+                    "tags": ["telemetry:collectd"],
+                    "min_right_y": 0,
+                    "title": "10.0.0.1 memory"}
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(target))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual)
+
 
 class AnnotationTestCase(unittest.TestCase):
 
@@ -850,17 +902,19 @@ class CollectdMemoryTestCase(unittest.TestCase):
                     {"status": "active", "type": "numeric", "name": "memory`memory`buffered"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`cached"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`free"}]
-        actual = memory.get_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
+        actual = memory.get_sorted_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
         self.assertEqual(expected, actual)
 
     def test_get_memory_datapoints(self):
-        metrics = memory.get_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
+        metrics = memory.get_sorted_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
         datapoints = memory.get_memory_datapoints(check_bundle, metrics)
         for dp in datapoints:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
 
     def test_get_memory_graph_data(self):
+        self.assertEqual({}, memory.get_memory_graph_data({}))
+
         data = memory.get_memory_graph_data(check_bundle)
         self.assertIn("title", data)
         self.assertEqual("%s memory" % check_bundle["target"], data["title"])
