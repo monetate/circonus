@@ -58,6 +58,9 @@ Modules
 .. automodule:: circonus.collectd.memory
    :members:
 
+.. automodule:: circonus.collectd.network
+   :members:
+
 .. automodule:: circonus.graph
    :members:
 

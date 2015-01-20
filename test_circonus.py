@@ -14,7 +14,7 @@ from colour import Color
 from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-from circonus.collectd import cpu, memory
+from circonus.collectd import cpu, memory, network
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -924,6 +924,22 @@ class CollectdMemoryTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+
+class CollectdNetworkTestCase(unittest.TestCase):
+
+    def test_get_network_metrics(self):
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
+        actual = network.get_network_metrics(check_bundle["metrics"])
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
+        actual = network.get_network_metrics(check_bundle["metrics"], "eth0")
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0") and "octets" in m["name"]]
+        actual = network.get_network_metrics(check_bundle["metrics"], "eth0", "octets")
+        self.assertItemsEqual(expected, actual)
 
 
 class GraphTestCase(unittest.TestCase):
