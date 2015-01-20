@@ -64,6 +64,10 @@ def get_network_datapoints(check_bundle, interface="eth0"):
     :param str interface: The network interface name, e.g., "eth0".
     :rtype: :py:class:`list`
 
+    ``octets`` and ``errors`` will be returned.  ``octets`` datapoints have data formulas added to them which makes
+    them render as bits per second.  Transmitted ``octets`` will be on the top and received ``octets`` will be on the
+    bottom of the graph due to the data formulas.
+
     """
     datapoints = []
     for cid in check_bundle.get("_checks", []):
