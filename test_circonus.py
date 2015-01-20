@@ -761,7 +761,7 @@ class MetricTestCase(unittest.TestCase):
             self.assertEqual("attribute", dp["custom"])
 
 
-class CollectdTestCase(unittest.TestCase):
+class CollectdCpuTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -830,6 +830,7 @@ class CollectdTestCase(unittest.TestCase):
         self.assertIn("title", data)
         self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
         self.assertEqual(100, data["max_left_y"])
+
 
 class CollectdMemoryTestCase(unittest.TestCase):
 
