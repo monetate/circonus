@@ -987,6 +987,15 @@ class CollectdNetworkTestCase(unittest.TestCase):
         self.assertFalse(network.is_receiver({"name": "test"}))
         self.assertFalse(network.is_receiver({}))
 
+    def test_get_network_graph_data(self):
+        data = network.get_network_graph_data({"target": "10.0.0.1", "type": "collectd"})
+        self.assertEqual([], data["datapoints"])
+
+        data = network.get_network_graph_data(check_bundle)
+        self.assertIn("datapoints", data)
+        self.assertIn("title", data)
+        self.assertEqual("%s network eth0 bit/s" % check_bundle["target"], data["title"])
+
 
 class GraphTestCase(unittest.TestCase):
 

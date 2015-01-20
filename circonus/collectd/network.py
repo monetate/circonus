@@ -9,6 +9,7 @@ Transmitted metrics will be on the top of the graph and received metrics will be
 
 """
 
+from circonus.graph import get_graph_data
 from circonus.metric import get_datapoints
 from circonus.util import get_check_id_from_cid
 
@@ -61,7 +62,7 @@ def get_network_datapoints(check_bundle, interface="eth0"):
     """Get a list of datapoints for ``check_bundle`` and ``interface``.
 
     :param list check_bundle: The check bundle.
-    :param str interface: The network interface name, e.g., "eth0".
+    :param str interface: (optional) The network interface name, e.g., "eth0".
     :rtype: :py:class:`list`
 
     ``octets`` and ``errors`` will be returned.  ``octets`` datapoints have data formulas added to them which makes
@@ -83,3 +84,20 @@ def get_network_datapoints(check_bundle, interface="eth0"):
         errors = get_network_metrics(metrics, interface, "errors")
         datapoints.extend(get_datapoints(check_id, errors, {"derive": "counter", "axis": "r"}))
     return datapoints
+
+
+def get_network_graph_data(check_bundle, interface="eth0"):
+    """Get graph data for ``check_bundle``.
+
+    :param dict check_bundle: The check bundle to create graph data with.
+    :param str interface: (optional) The network interface name, e.g., "eth0".
+
+    :rtype: :py:class:`dict`
+
+    The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
+    <https://login.circonus.com/resources/api/calls/graph>`_.
+
+    """
+    datapoints = get_network_datapoints(check_bundle, interface)
+    custom_data = {"title": "%s network %s bit/s" % (check_bundle["target"], interface)}
+    return get_graph_data(check_bundle, datapoints, custom_data)
