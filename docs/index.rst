@@ -42,6 +42,7 @@ conveniences and features:
 - Resource `tagging`_
 - An `annotation`_ decorator and context manager
 - `Error`_ logging
+- *Opinionated* `collectd`_ system metric graphing
 
 User Guide
 ----------
@@ -69,3 +70,4 @@ API Documentation
 .. _requests: http://docs.python-requests.org/en/latest/index.html
 .. _Error: https://login.circonus.com/resources/api#errors
 .. _annotation: https://login.circonus.com/resources/api/calls/annotation
+.. _collectd: https://collectd.org/
