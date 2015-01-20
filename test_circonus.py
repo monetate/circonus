@@ -929,6 +929,8 @@ class CollectdMemoryTestCase(unittest.TestCase):
 class CollectdNetworkTestCase(unittest.TestCase):
 
     def test_get_network_metrics(self):
+        self.assertEqual([], network.get_network_metrics({}))
+
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
         actual = network.get_network_metrics(check_bundle["metrics"])
         self.assertItemsEqual(expected, actual)
@@ -940,6 +942,32 @@ class CollectdNetworkTestCase(unittest.TestCase):
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0") and "octets" in m["name"]]
         actual = network.get_network_metrics(check_bundle["metrics"], "eth0", "octets")
         self.assertItemsEqual(expected, actual)
+
+    def test_get_network_datapoints(self):
+        datapoints = network.get_network_datapoints(check_bundle)
+        self.assertIsInstance(datapoints, types.ListType)
+        self.assertTrue(len(datapoints) > 0)
+        for dp in datapoints:
+            self.assertIsInstance(dp, types.DictType)
+            self.assertIn("metric_name", dp)
+            self.assertTrue(dp["metric_name"].startswith("interface`eth0"))
+            self.assertIn("data_formula", dp)
+            if "octets" in dp["metric_name"]:
+                if dp["metric_name"].endswith("tx"):
+                    self.assertEqual("=8*VAL", dp["data_formula"])
+                elif dp["metric_name"].endswith("rx"):
+                    self.assertEqual("=-8*VAL", dp["data_formula"])
+            if "errors" in dp["metric_name"]:
+                self.assertIn("axis", dp)
+                self.assertEqual("r", dp["axis"])
+            self.assertIn("derive", dp)
+            self.assertEqual("counter", dp["derive"])
+        self.assertTrue([dp for dp in datapoints if "octets" in dp["metric_name"]])
+        self.assertTrue([dp for dp in datapoints if "errors" in dp["metric_name"]])
+
+        interface = "eth1"
+        datapoints = network.get_network_datapoints(check_bundle, interface)
+        self.assertEqual([], datapoints)
 
 
 class GraphTestCase(unittest.TestCase):
