@@ -60,7 +60,7 @@ def get_cpu_metrics(metrics):
     The CPU metrics are sorted by:
 
     #. Name, ascending
-    #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
+    #. Explicit suffix, i.e., :const:`~circonus.collectd.cpu.CPU_METRIC_SUFFIXES`
 
     """
     cpus = _get_cpus(metrics)
