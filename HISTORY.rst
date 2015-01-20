@@ -1,6 +1,14 @@
 Release History
 ---------------
 
+0.0.9 (2015-01-20)
+++++++++++++++++++
+
+**Improvements**
+
+- Add collectd network graph
+- Add API documentation
+
 0.0.8 (2015-01-20)
 ++++++++++++++++++
 
