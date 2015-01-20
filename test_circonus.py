@@ -14,7 +14,7 @@ from colour import Color
 from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-from circonus.collectd import cpu
+from circonus.collectd import cpu, memory
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -821,7 +821,6 @@ class CollectdTestCase(unittest.TestCase):
             self.assertNotIn("hidden", m)
         self.assertNotEqual(self.metrics, stacked_metrics)
 
-
     def test_get_cpu_graph_data(self):
         data = cpu.get_cpu_graph_data(check_bundle)
         self.assertIn("tags", data)
@@ -831,6 +830,24 @@ class CollectdTestCase(unittest.TestCase):
         self.assertIn("title", data)
         self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
         self.assertEqual(100, data["max_left_y"])
+
+    def test_get_memory_metrics(self):
+        expected = [{"status": "active", "type": "numeric", "name": "memory`memory`used"},
+                    {"status": "active", "type": "numeric", "name": "memory`memory`buffered"},
+                    {"status": "active", "type": "numeric", "name": "memory`memory`cached"},
+                    {"status": "active", "type": "numeric", "name": "memory`memory`free"}]
+        actual = memory.get_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
+        self.assertEqual(expected, actual)
+
+    def test_get_memory_graph_data(self):
+        data = memory.get_memory_graph_data(check_bundle)
+        self.assertIn("title", data)
+        self.assertEqual("%s memory" % check_bundle["target"], data["title"])
+        self.assertEqual(0, data["min_left_y"])
+        self.assertEqual(0, data["min_right_y"])
+        self.assertIn("datapoints", data)
+        for dp in data["datapoints"]:
+            self.assertEqual("gauge", dp["derive"])
 
 
 class GraphTestCase(unittest.TestCase):
