@@ -14,7 +14,7 @@ from colour import Color
 from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-from circonus.collectd import cpu, memory
+from circonus.collectd import cpu, memory, network
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -528,6 +528,31 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+    @responses.activate
+    def test_create_collectd_network_graph(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": [{"name": "interface`eth0`if_octets`rx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_octets`tx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_errors`rx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_errors`tx", "status": "active", "type": "numeric"}]}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        expected = {"title": "10.0.0.1 network eth0 bit/s",
+                    "datapoints": [
+                        {"derive": "counter", "name": "interface`eth0`if_octets`tx", "color": "#ff0000", "legend_formula":None, "check_id": 12345, "data_formula": "=8*VAL", "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`tx"},
+                        {"derive": "counter", "name": "interface`eth0`if_octets`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": "=-8*VAL","metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`rx"},
+                        {"derive": "counter", "name": "interface`eth0`if_errors`tx", "color": "#ff0000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "r", "stack": None, "metric_name": "interface`eth0`if_errors`tx"},
+                        {"derive": "counter", "name": "interface`eth0`if_errors`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "r", "stack": None, "metric_name": "interface`eth0`if_errors`rx"}],
+                    "tags": ["telemetry:collectd"]}
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNotNone(self.c.create_collectd_network_graph(target))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual)
+
 
 class AnnotationTestCase(unittest.TestCase):
 
@@ -897,7 +922,7 @@ class CollectdCpuTestCase(unittest.TestCase):
 
 class CollectdMemoryTestCase(unittest.TestCase):
 
-    def test_get_memory_metrics(self):
+    def test_get_sorted_memory_metrics(self):
         expected = [{"status": "active", "type": "numeric", "name": "memory`memory`used"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`buffered"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`cached"},
@@ -924,6 +949,77 @@ class CollectdMemoryTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+
+class CollectdNetworkTestCase(unittest.TestCase):
+
+    def test_get_network_metrics(self):
+        self.assertEqual([], network.get_network_metrics({}))
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
+        actual = network.get_network_metrics(check_bundle["metrics"])
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
+        actual = network.get_network_metrics(check_bundle["metrics"], "eth0")
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0") and "octets" in m["name"]]
+        actual = network.get_network_metrics(check_bundle["metrics"], "eth0", "octets")
+        self.assertItemsEqual(expected, actual)
+
+    def test_get_network_datapoints(self):
+        self.assertEqual([], network.get_network_datapoints({}))
+
+        datapoints = network.get_network_datapoints(check_bundle)
+        self.assertIsInstance(datapoints, types.ListType)
+        self.assertTrue(len(datapoints) > 0)
+        for dp in datapoints:
+            self.assertIsInstance(dp, types.DictType)
+            self.assertIn("metric_name", dp)
+            self.assertTrue(dp["metric_name"].startswith("interface`eth0"))
+            self.assertIn("data_formula", dp)
+            if "octets" in dp["metric_name"]:
+                if dp["metric_name"].endswith("tx"):
+                    self.assertEqual("=8*VAL", dp["data_formula"])
+                elif dp["metric_name"].endswith("rx"):
+                    self.assertEqual("=-8*VAL", dp["data_formula"])
+            if "errors" in dp["metric_name"]:
+                self.assertIn("axis", dp)
+                self.assertEqual("r", dp["axis"])
+            self.assertIn("derive", dp)
+            self.assertEqual("counter", dp["derive"])
+        self.assertTrue([dp for dp in datapoints if "octets" in dp["metric_name"]])
+        self.assertTrue([dp for dp in datapoints if "errors" in dp["metric_name"]])
+
+        interface = "eth1"
+        datapoints = network.get_network_datapoints(check_bundle, interface)
+        self.assertEqual([], datapoints)
+
+    def test_is_transmitter(self):
+        self.assertTrue(network.is_transmitter({"name": "tx"}))
+        self.assertTrue(network.is_transmitter({"name": "test tx"}))
+        self.assertFalse(network.is_transmitter({"name": "rx"}))
+        self.assertFalse(network.is_transmitter({"name": "test rx"}))
+        self.assertFalse(network.is_transmitter({"name": "test"}))
+        self.assertFalse(network.is_transmitter({}))
+
+    def test_is_receiver(self):
+        self.assertTrue(network.is_receiver({"name": "rx"}))
+        self.assertTrue(network.is_receiver({"name": "test rx"}))
+        self.assertFalse(network.is_receiver({"name": "tx"}))
+        self.assertFalse(network.is_receiver({"name": "test tx"}))
+        self.assertFalse(network.is_receiver({"name": "test"}))
+        self.assertFalse(network.is_receiver({}))
+
+    def test_get_network_graph_data(self):
+        data = network.get_network_graph_data({"target": "10.0.0.1", "type": "collectd"})
+        self.assertEqual([], data["datapoints"])
+
+        data = network.get_network_graph_data(check_bundle)
+        self.assertIn("datapoints", data)
+        self.assertIn("title", data)
+        self.assertEqual("%s network eth0 bit/s" % check_bundle["target"], data["title"])
 
 
 class GraphTestCase(unittest.TestCase):
