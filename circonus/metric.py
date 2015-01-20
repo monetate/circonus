@@ -20,7 +20,7 @@ def get_metrics(check_bundle, metric_re):
     :rtype: :py:class:`list`
 
     """
-    return [m for m in check_bundle["metrics"] if metric_re.match(m["name"])]
+    return [m for m in check_bundle.get("metrics", []) if metric_re.match(m["name"])]
 
 
 def get_metrics_sorted_by_suffix(metrics, suffixes):

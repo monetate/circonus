@@ -722,6 +722,8 @@ class TagTestCase(unittest.TestCase):
 class MetricTestCase(unittest.TestCase):
 
     def test_get_metrics(self):
+        self.assertEqual([], metric.get_metrics({}, cpu.CPU_METRIC_RE))
+
         expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
