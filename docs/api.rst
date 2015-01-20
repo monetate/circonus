@@ -55,6 +55,9 @@ Modules
 .. automodule:: circonus.collectd.cpu
    :members:
 
+.. automodule:: circonus.collectd.df
+   :members:
+
 .. automodule:: circonus.collectd.memory
    :members:
 
