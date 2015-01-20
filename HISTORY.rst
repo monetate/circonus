@@ -10,6 +10,7 @@ Release History
 - Add API documentation
 
 **Bug fixes**
+
 - Fix key error when looking for metrics in a check bundle that has none.
 - Handle error state when sorting metrics.  If there were less metrics than
   suffixes to sort by the returned list would contain ``None`` values.  Now an
