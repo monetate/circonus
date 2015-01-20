@@ -944,6 +944,8 @@ class CollectdNetworkTestCase(unittest.TestCase):
         self.assertItemsEqual(expected, actual)
 
     def test_get_network_datapoints(self):
+        self.assertEqual([], network.get_network_datapoints({}))
+
         datapoints = network.get_network_datapoints(check_bundle)
         self.assertIsInstance(datapoints, types.ListType)
         self.assertTrue(len(datapoints) > 0)

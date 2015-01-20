@@ -66,7 +66,7 @@ def get_network_datapoints(check_bundle, interface="eth0"):
 
     """
     datapoints = []
-    for cid in check_bundle.get("_checks"):
+    for cid in check_bundle.get("_checks", []):
         check_id = get_check_id_from_cid(cid)
         metrics = check_bundle["metrics"]
         octets = get_network_metrics(metrics, interface, "octets")
