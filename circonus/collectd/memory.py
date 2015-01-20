@@ -3,6 +3,8 @@
 circonus.collectd.memory
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+Create graph data from a ``collectd`` check bundle.
+
 """
 
 import re

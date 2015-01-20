@@ -3,6 +3,8 @@
 cicronus.util
 ~~~~~~~~~~~~~
 
+Utility functions that other modules depend upon.
+
 """
 
 

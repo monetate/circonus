@@ -3,6 +3,8 @@
 circonus.collectd.cpu
 ~~~~~~~~~~~~~~~~~~~~~
 
+Create graph data from a ``collectd`` check bundle.
+
 """
 
 from collections import OrderedDict
