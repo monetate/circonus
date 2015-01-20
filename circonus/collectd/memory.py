@@ -38,6 +38,21 @@ def get_memory_metrics(metrics):
     return get_metrics_sorted_by_suffix(metrics, MEMORY_METRIC_SUFFIXES)
 
 
+def get_memory_datapoints(check_bundle, metrics):
+    """Get a list of datapoints from *sorted* ``metrics``.
+
+    :param dict check_bundle: The check bundle.
+    :param list metrics: The sorted metrics to cerate datapoints with.
+    :rtype: :py:class:`list`
+
+    """
+    datapoints = []
+    for i, cid in enumerate(check_bundle["_checks"]):
+        check_id = get_check_id_from_cid(cid)
+        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "gauge", "stack": i}))
+    return datapoints
+
+
 def get_memory_graph_data(check_bundle):
     """Get memory graph data for ``check_bundle``.
 
@@ -49,9 +64,6 @@ def get_memory_graph_data(check_bundle):
 
     """
     metrics = get_memory_metrics(get_metrics(check_bundle, MEMORY_METRIC_RE))
-    datapoints = []
-    for i, cid in enumerate(check_bundle["_checks"]):
-        check_id = get_check_id_from_cid(cid)
-        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "gauge", "stack": i}))
+    datapoints = get_memory_datapoints(check_bundle, metrics)
     custom_data = {"title": "%s memory" % check_bundle["target"], "min_left_y": 0, "min_right_y": 0}
     return get_graph_data(check_bundle, datapoints, custom_data)

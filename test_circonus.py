@@ -831,6 +831,8 @@ class CollectdTestCase(unittest.TestCase):
         self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
         self.assertEqual(100, data["max_left_y"])
 
+class CollectdMemoryTestCase(unittest.TestCase):
+
     def test_get_memory_metrics(self):
         expected = [{"status": "active", "type": "numeric", "name": "memory`memory`used"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`buffered"},
@@ -838,6 +840,13 @@ class CollectdTestCase(unittest.TestCase):
                     {"status": "active", "type": "numeric", "name": "memory`memory`free"}]
         actual = memory.get_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
         self.assertEqual(expected, actual)
+
+    def test_get_memory_datapoints(self):
+        metrics = memory.get_memory_metrics(metric.get_metrics(check_bundle, memory.MEMORY_METRIC_RE))
+        datapoints = memory.get_memory_datapoints(check_bundle, metrics)
+        for dp in datapoints:
+            self.assertEqual("gauge", dp["derive"])
+            self.assertEqual(0, dp["stack"])
 
     def test_get_memory_graph_data(self):
         data = memory.get_memory_graph_data(check_bundle)
@@ -848,6 +857,7 @@ class CollectdTestCase(unittest.TestCase):
         self.assertIn("datapoints", data)
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
+            self.assertEqual(0, dp["stack"])
 
 
 class GraphTestCase(unittest.TestCase):
