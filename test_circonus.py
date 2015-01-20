@@ -897,7 +897,7 @@ class CollectdCpuTestCase(unittest.TestCase):
 
 class CollectdMemoryTestCase(unittest.TestCase):
 
-    def test_get_memory_metrics(self):
+    def test_get_sorted_memory_metrics(self):
         expected = [{"status": "active", "type": "numeric", "name": "memory`memory`used"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`buffered"},
                     {"status": "active", "type": "numeric", "name": "memory`memory`cached"},
