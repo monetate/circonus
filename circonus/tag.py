@@ -3,6 +3,8 @@
 circonus.tag
 ~~~~~~~~~~~~
 
+Manipulate tags on resources that support them.
+
 """
 
 from circonus.util import get_resource_from_cid

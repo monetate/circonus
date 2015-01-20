@@ -3,6 +3,8 @@
 circonus.graph
 ~~~~~~~~~~~~~~
 
+Create graph data from a check bundle.
+
 """
 
 

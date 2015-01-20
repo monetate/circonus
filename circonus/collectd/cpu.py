@@ -1,9 +1,9 @@
 """
 
-circonus.collectd
-~~~~~~~~~~~~~~~~~
+circonus.collectd.cpu
+~~~~~~~~~~~~~~~~~~~~~
 
-Turn `collectd <http://collectd.org/>`_  check bundles into graphs and worksheets.
+Create graph data from a ``collectd`` check bundle.
 
 """
 
@@ -19,9 +19,9 @@ from circonus.util import get_check_id_from_cid
 
 
 CPU_METRIC_SUFFIXES = ["steal", "interrupt", "softirq", "system", "wait", "user", "nice", "idle"]
-"""Ordered list of CPU metric suffixes.
+"""Ordered list of metric suffixes.
 
-This list is used to filter and sort CPU metrics in preparation for creating a CPU graph.
+This list is used to filter and sort metrics in preparation for creating a graph.
 
 """
 
@@ -29,7 +29,7 @@ CPU_METRIC_RE = re.compile(r"""
 ^cpu                            # Starts with "cpu"
 `.*`                            # Anything in between
 """, re.X)
-"""A compiled regular expression which matches collectd CPU metrics."""
+"""A compiled regular expression which matches ``collectd`` metrics."""
 
 CPU_NUMBER_RE = re.compile(r"""
 ^cpu                            # Starts with "cpu"
@@ -55,14 +55,14 @@ def _get_cpus(metrics):
 
 
 def get_cpu_metrics(metrics):
-    """Get a sorted list of CPU metrics from ``metrics``.
+    """Get a sorted list of metrics from ``metrics``.
 
     :param list metrics: The metrics to sort.
 
     The CPU metrics are sorted by:
 
     #. Name, ascending
-    #. Explicit suffix, i.e., :const:`~circonus.collectd.CPU_METRIC_SUFFIXES`
+    #. Explicit suffix, i.e., :const:`~circonus.collectd.cpu.CPU_METRIC_SUFFIXES`
 
     """
     cpus = _get_cpus(metrics)
@@ -74,7 +74,7 @@ def get_cpu_metrics(metrics):
 
 
 def get_stacked_cpu_metrics(metrics, hide_idle=True):
-    """Get CPU metrics with the ``stack`` attribute added.
+    """Get metrics with the ``stack`` attribute added.
 
     :param list metrics: The metrics to stack.
     :param bool hide_idle: (optional) Hide CPU idle.
@@ -94,7 +94,7 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
 
 
 def get_cpu_graph_data(check_bundle):
-    """Get CPU graph data for ``check_bundle``.
+    """Get graph data for ``check_bundle``.
 
     :param dict check_bundle: The check bundle to create graph data with.
     :rtype: :py:class:`dict`

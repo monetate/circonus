@@ -20,7 +20,7 @@ def get_metrics(check_bundle, metric_re):
     :rtype: :py:class:`list`
 
     """
-    return [m for m in check_bundle["metrics"] if metric_re.match(m["name"])]
+    return [m for m in check_bundle.get("metrics", []) if metric_re.match(m["name"])]
 
 
 def get_metrics_sorted_by_suffix(metrics, suffixes):
@@ -34,6 +34,8 @@ def get_metrics_sorted_by_suffix(metrics, suffixes):
     stacked metrics the order in which metrics are stacked affects the manner in which they are displayed, e.g.,
     perhaps "free" memory makes the most sense when it is at the top of a memory graph.
 
+    If there are not enough ``metrics`` to sort for ``suffixes`` an empty list is returned.
+
     """
     metrics_map = OrderedDict.fromkeys(suffixes)
     for m in metrics:
@@ -41,7 +43,8 @@ def get_metrics_sorted_by_suffix(metrics, suffixes):
             if m["name"].endswith(s):
                 metrics_map[s] = m
                 break
-    return metrics_map.values()
+    sorted_metrics = metrics_map.values()
+    return sorted_metrics if all(sorted_metrics) else []
 
 
 def get_datapoints(check_id, metrics, custom=None):
