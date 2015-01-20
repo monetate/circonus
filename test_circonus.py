@@ -14,7 +14,7 @@ from colour import Color
 from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-from circonus.collectd import cpu, memory, network
+from circonus.collectd import cpu, interface, memory
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -529,7 +529,7 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertEqual(expected, actual)
 
     @responses.activate
-    def test_create_collectd_network_graph(self):
+    def test_create_collectd_interface_graph(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
               "target": target,
@@ -540,7 +540,7 @@ class CirconusClientTestCase(unittest.TestCase):
                           {"name": "interface`eth0`if_errors`tx", "status": "active", "type": "numeric"}]}
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
                       content_type="application/json")
-        expected = {"title": "10.0.0.1 network eth0 bit/s",
+        expected = {"title": "10.0.0.1 interface eth0 bit/s",
                     "datapoints": [
                         {"derive": "counter", "name": "interface`eth0`if_octets`tx", "color": "#ff0000", "legend_formula":None, "check_id": 12345, "data_formula": "=8*VAL", "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`tx"},
                         {"derive": "counter", "name": "interface`eth0`if_octets`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": "=-8*VAL","metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`rx"},
@@ -548,7 +548,7 @@ class CirconusClientTestCase(unittest.TestCase):
                         {"derive": "counter", "name": "interface`eth0`if_errors`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "r", "stack": None, "metric_name": "interface`eth0`if_errors`rx"}],
                     "tags": ["telemetry:collectd"]}
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNotNone(self.c.create_collectd_network_graph(target))
+            self.assertIsNotNone(self.c.create_collectd_interface_graph(target))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
@@ -951,27 +951,27 @@ class CollectdMemoryTestCase(unittest.TestCase):
             self.assertEqual(0, dp["stack"])
 
 
-class CollectdNetworkTestCase(unittest.TestCase):
+class CollectdInterfaceTestCase(unittest.TestCase):
 
-    def test_get_network_metrics(self):
-        self.assertEqual([], network.get_network_metrics({}))
+    def test_get_interface_metrics(self):
+        self.assertEqual([], interface.get_interface_metrics({}))
 
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
-        actual = network.get_network_metrics(check_bundle["metrics"])
+        actual = interface.get_interface_metrics(check_bundle["metrics"])
         self.assertItemsEqual(expected, actual)
 
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0")]
-        actual = network.get_network_metrics(check_bundle["metrics"], "eth0")
+        actual = interface.get_interface_metrics(check_bundle["metrics"], "eth0")
         self.assertItemsEqual(expected, actual)
 
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("interface`eth0") and "octets" in m["name"]]
-        actual = network.get_network_metrics(check_bundle["metrics"], "eth0", "octets")
+        actual = interface.get_interface_metrics(check_bundle["metrics"], "eth0", "octets")
         self.assertItemsEqual(expected, actual)
 
-    def test_get_network_datapoints(self):
-        self.assertEqual([], network.get_network_datapoints({}))
+    def test_get_interface_datapoints(self):
+        self.assertEqual([], interface.get_interface_datapoints({}))
 
-        datapoints = network.get_network_datapoints(check_bundle)
+        datapoints = interface.get_interface_datapoints(check_bundle)
         self.assertIsInstance(datapoints, types.ListType)
         self.assertTrue(len(datapoints) > 0)
         for dp in datapoints:
@@ -992,34 +992,34 @@ class CollectdNetworkTestCase(unittest.TestCase):
         self.assertTrue([dp for dp in datapoints if "octets" in dp["metric_name"]])
         self.assertTrue([dp for dp in datapoints if "errors" in dp["metric_name"]])
 
-        interface = "eth1"
-        datapoints = network.get_network_datapoints(check_bundle, interface)
+        interface_name = "eth1"
+        datapoints = interface.get_interface_datapoints(check_bundle, interface_name)
         self.assertEqual([], datapoints)
 
     def test_is_transmitter(self):
-        self.assertTrue(network.is_transmitter({"name": "tx"}))
-        self.assertTrue(network.is_transmitter({"name": "test tx"}))
-        self.assertFalse(network.is_transmitter({"name": "rx"}))
-        self.assertFalse(network.is_transmitter({"name": "test rx"}))
-        self.assertFalse(network.is_transmitter({"name": "test"}))
-        self.assertFalse(network.is_transmitter({}))
+        self.assertTrue(interface.is_transmitter({"name": "tx"}))
+        self.assertTrue(interface.is_transmitter({"name": "test tx"}))
+        self.assertFalse(interface.is_transmitter({"name": "rx"}))
+        self.assertFalse(interface.is_transmitter({"name": "test rx"}))
+        self.assertFalse(interface.is_transmitter({"name": "test"}))
+        self.assertFalse(interface.is_transmitter({}))
 
     def test_is_receiver(self):
-        self.assertTrue(network.is_receiver({"name": "rx"}))
-        self.assertTrue(network.is_receiver({"name": "test rx"}))
-        self.assertFalse(network.is_receiver({"name": "tx"}))
-        self.assertFalse(network.is_receiver({"name": "test tx"}))
-        self.assertFalse(network.is_receiver({"name": "test"}))
-        self.assertFalse(network.is_receiver({}))
+        self.assertTrue(interface.is_receiver({"name": "rx"}))
+        self.assertTrue(interface.is_receiver({"name": "test rx"}))
+        self.assertFalse(interface.is_receiver({"name": "tx"}))
+        self.assertFalse(interface.is_receiver({"name": "test tx"}))
+        self.assertFalse(interface.is_receiver({"name": "test"}))
+        self.assertFalse(interface.is_receiver({}))
 
-    def test_get_network_graph_data(self):
-        data = network.get_network_graph_data({"target": "10.0.0.1", "type": "collectd"})
+    def test_get_interface_graph_data(self):
+        data = interface.get_interface_graph_data({"target": "10.0.0.1", "type": "collectd"})
         self.assertEqual([], data["datapoints"])
 
-        data = network.get_network_graph_data(check_bundle)
+        data = interface.get_interface_graph_data(check_bundle)
         self.assertIn("datapoints", data)
         self.assertIn("title", data)
-        self.assertEqual("%s network eth0 bit/s" % check_bundle["target"], data["title"])
+        self.assertEqual("%s interface eth0 bit/s" % check_bundle["target"], data["title"])
 
 
 class GraphTestCase(unittest.TestCase):
