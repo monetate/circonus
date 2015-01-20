@@ -5,10 +5,19 @@ circonus.collectd.network
 
 Create graph data from a ``collectd`` check bundle.
 
+Transmitted metrics will be on the top of the graph and received metrics will be on the bottom.
+
 """
 
 from circonus.metric import get_datapoints
 from circonus.util import get_check_id_from_cid
+
+
+DATA_FORMULA_TRANSMITTER = "=8*VAL"
+"""The data formula to apply to transmitted network metrics."""
+
+DATA_FORMULA_RECEIVER = "=-8*VAL"
+"""The data formula to apply to received network metrics."""
 
 
 def get_network_metrics(metrics, interface="eth0", kind=None):
@@ -28,6 +37,26 @@ def get_network_metrics(metrics, interface="eth0", kind=None):
     return network_metrics
 
 
+def is_transmitter(metric):
+    """Is network ``metric`` a transmitter?
+
+    :param dict metric: The metric.
+    :rtype: :py:class:`bool`
+
+    """
+    return metric.get("name", "").endswith("tx")
+
+
+def is_receiver(metric):
+    """Is network ``metric`` a receiver?
+
+    :param dict metric: The metric.
+    :rtype: :py:class:`bool`
+
+    """
+    return metric.get("name", "").endswith("rx")
+
+
 def get_network_datapoints(check_bundle, interface="eth0"):
     """Get a list of datapoints for ``check_bundle`` and ``interface``.
 
@@ -42,10 +71,10 @@ def get_network_datapoints(check_bundle, interface="eth0"):
         metrics = check_bundle["metrics"]
         octets = get_network_metrics(metrics, interface, "octets")
         for m in octets:
-            if m["name"].endswith("tx"):
-                m["data_formula"] = "=8*VAL"
-            elif m["name"].endswith("rx"):
-                m["data_formula"] = "=-8*VAL"
+            if is_transmitter(m):
+                m["data_formula"] = DATA_FORMULA_TRANSMITTER
+            elif is_receiver(m):
+                m["data_formula"] = DATA_FORMULA_RECEIVER
         datapoints.extend(get_datapoints(check_id, octets, {"derive": "counter"}))
         errors = get_network_metrics(metrics, interface, "errors")
         datapoints.extend(get_datapoints(check_id, errors, {"derive": "counter", "axis": "r"}))

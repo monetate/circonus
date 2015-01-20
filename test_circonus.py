@@ -969,6 +969,22 @@ class CollectdNetworkTestCase(unittest.TestCase):
         datapoints = network.get_network_datapoints(check_bundle, interface)
         self.assertEqual([], datapoints)
 
+    def test_is_transmitter(self):
+        self.assertTrue(network.is_transmitter({"name": "tx"}))
+        self.assertTrue(network.is_transmitter({"name": "test tx"}))
+        self.assertFalse(network.is_transmitter({"name": "rx"}))
+        self.assertFalse(network.is_transmitter({"name": "test rx"}))
+        self.assertFalse(network.is_transmitter({"name": "test"}))
+        self.assertFalse(network.is_transmitter({}))
+
+    def test_is_receiver(self):
+        self.assertTrue(network.is_receiver({"name": "rx"}))
+        self.assertTrue(network.is_receiver({"name": "test rx"}))
+        self.assertFalse(network.is_receiver({"name": "tx"}))
+        self.assertFalse(network.is_receiver({"name": "test tx"}))
+        self.assertFalse(network.is_receiver({"name": "test"}))
+        self.assertFalse(network.is_receiver({}))
+
 
 class GraphTestCase(unittest.TestCase):
 
