@@ -11,9 +11,10 @@ import types
 import unittest
 
 from colour import Color
-from circonus import CirconusClient, collectd, graph, metric, tag, util
+from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
+from circonus.collectd import cpu
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -737,17 +738,17 @@ class MetricTestCase(unittest.TestCase):
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
-        actual = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
+        actual = metric.get_metrics(check_bundle, cpu.CPU_METRIC_RE)
         self.assertEqual(expected, actual)
 
     def test_get_metrics_sorted_by_suffix(self):
-        unsorted_metrics = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
-        sorted_metrics = metric.get_metrics_sorted_by_suffix(unsorted_metrics, collectd.CPU_METRIC_SUFFIXES)
+        unsorted_metrics = metric.get_metrics(check_bundle, cpu.CPU_METRIC_RE)
+        sorted_metrics = metric.get_metrics_sorted_by_suffix(unsorted_metrics, cpu.CPU_METRIC_SUFFIXES)
         actual = [m["name"].rpartition("`")[-1] for m in sorted_metrics]
-        self.assertEqual(collectd.CPU_METRIC_SUFFIXES, actual)
+        self.assertEqual(cpu.CPU_METRIC_SUFFIXES, actual)
 
     def test_get_datapoints(self):
-        metrics = metric.get_metrics(check_bundle, collectd.CPU_METRIC_RE)
+        metrics = metric.get_metrics(check_bundle, cpu.CPU_METRIC_RE)
         check_id = util.get_check_id_from_cid(check_bundle["_cid"])
         datapoints = metric.get_datapoints(check_id, metrics)
         for dp in datapoints:
@@ -783,7 +784,7 @@ class CollectdTestCase(unittest.TestCase):
 
     def test_get_cpus(self):
         expected = ['cpu`0`', 'cpu`1`']
-        actual = collectd._get_cpus(self.metrics)
+        actual = cpu._get_cpus(self.metrics)
         self.assertEqual(expected, actual)
 
     def test_get_cpu_metrics(self):
@@ -803,18 +804,18 @@ class CollectdTestCase(unittest.TestCase):
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
                     {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'}]
-        actual = collectd.get_cpu_metrics(self.metrics)
+        actual = cpu.get_cpu_metrics(self.metrics)
         self.assertEqual(expected, actual)
 
     def test_get_stacked_cpu_metrics(self):
-        stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics)
+        stacked_metrics = cpu.get_stacked_cpu_metrics(self.metrics)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
             if m["name"].endswith("idle"):
                 self.assertTrue(m["hidden"])
         self.assertNotEqual(self.metrics, stacked_metrics)
 
-        stacked_metrics = collectd.get_stacked_cpu_metrics(self.metrics, hide_idle=False)
+        stacked_metrics = cpu.get_stacked_cpu_metrics(self.metrics, hide_idle=False)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
             self.assertNotIn("hidden", m)
@@ -822,7 +823,7 @@ class CollectdTestCase(unittest.TestCase):
 
 
     def test_get_cpu_graph_data(self):
-        data = collectd.get_cpu_graph_data(check_bundle)
+        data = cpu.get_cpu_graph_data(check_bundle)
         self.assertIn("tags", data)
         self.assertEqual(["telemetry:collectd"], data["tags"])
         self.assertIn("datapoints", data)
@@ -835,8 +836,7 @@ class CollectdTestCase(unittest.TestCase):
 class GraphTestCase(unittest.TestCase):
 
     def test_get_graph_data(self):
-        metrics = collectd.get_stacked_cpu_metrics(collectd.get_cpu_metrics(metric.get_metrics(check_bundle,
-                                                                                               collectd.CPU_METRIC_RE)))
+        metrics = cpu.get_stacked_cpu_metrics(cpu.get_cpu_metrics(metric.get_metrics(check_bundle, cpu.CPU_METRIC_RE)))
         check_id = util.get_check_id_from_cid(check_bundle["_cid"])
         data = graph.get_graph_data(check_bundle, metric.get_datapoints(check_id, metrics))
         self.assertIn("tags", data)

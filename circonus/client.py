@@ -14,7 +14,7 @@ import logging
 import json
 
 from circonus.annotation import Annotation
-from circonus.collectd import get_cpu_graph_data
+from circonus.collectd.cpu import get_cpu_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
 from requests.exceptions import HTTPError
 
