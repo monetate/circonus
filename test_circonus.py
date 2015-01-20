@@ -528,6 +528,31 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+    @responses.activate
+    def test_create_collectd_network_graph(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": [{"name": "interface`eth0`if_octets`rx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_octets`tx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_errors`rx", "status": "active", "type": "numeric"},
+                          {"name": "interface`eth0`if_errors`tx", "status": "active", "type": "numeric"}]}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        expected = {"title": "10.0.0.1 network eth0 bit/s",
+                    "datapoints": [
+                        {"derive": "counter", "name": "interface`eth0`if_octets`tx", "color": "#ff0000", "legend_formula":None, "check_id": 12345, "data_formula": "=8*VAL", "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`tx"},
+                        {"derive": "counter", "name": "interface`eth0`if_octets`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": "=-8*VAL","metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": None, "metric_name": "interface`eth0`if_octets`rx"},
+                        {"derive": "counter", "name": "interface`eth0`if_errors`tx", "color": "#ff0000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "r", "stack": None, "metric_name": "interface`eth0`if_errors`tx"},
+                        {"derive": "counter", "name": "interface`eth0`if_errors`rx", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "r", "stack": None, "metric_name": "interface`eth0`if_errors`rx"}],
+                    "tags": ["telemetry:collectd"]}
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNotNone(self.c.create_collectd_network_graph(target))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual)
+
 
 class AnnotationTestCase(unittest.TestCase):
 
