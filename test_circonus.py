@@ -473,7 +473,6 @@ class CirconusClientTestCase(unittest.TestCase):
                         "_last_modified_by": "/user/1234",
                         "display_name": "%s collectd" % target,
                         "target": target,
-                        "tags": ["telemetry:collectd"],
                         "type": "collectd",
                         "notes": None,
                         "period": 60,
@@ -487,12 +486,12 @@ class CirconusClientTestCase(unittest.TestCase):
                                    "submission_target": "10.0.0.2:25826",
                                    "security_level": "0"},
                         "_last_modified": 1416618604}
-        data = {"title": "10.0.0.1 cpu", "tags": ["telemetry:collectd"], "max_left_y": 100, "datapoints": []}
+        data = {}
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
                       content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
-            self.c.create_collectd_cpu_graph(target)
-            post_patch.assert_called_with(get_api_url("graph"), headers=self.c.api_headers, data=json.dumps(data))
+            self.assertIsNone(self.c.create_collectd_cpu_graph(target))
+            post_patch.assert_not_called()
 
     @responses.activate
     def test_create_collectd_memory_graph_no_memory_metrics(self):
@@ -942,6 +941,7 @@ class CollectdCpuTestCase(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_get_stacked_cpu_metrics(self):
+        self.assertEqual([], cpu.get_stacked_cpu_metrics([]))
         stacked_metrics = cpu.get_stacked_cpu_metrics(self.metrics)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
@@ -955,7 +955,14 @@ class CollectdCpuTestCase(unittest.TestCase):
             self.assertNotIn("hidden", m)
         self.assertNotEqual(self.metrics, stacked_metrics)
 
+    def test_get_cpu_datapoints(self):
+        self.assertEqual([], cpu.get_cpu_datapoints({}, []))
+        metrics = cpu.get_stacked_cpu_metrics(self.metrics)
+        datapoints = cpu.get_cpu_datapoints(check_bundle, metrics)
+        self.assertIsInstance(datapoints, types.ListType)
+
     def test_get_cpu_graph_data(self):
+        self.assertEqual({}, cpu.get_cpu_graph_data({}))
         data = cpu.get_cpu_graph_data(check_bundle)
         self.assertIn("tags", data)
         self.assertEqual(["telemetry:collectd"], data["tags"])
