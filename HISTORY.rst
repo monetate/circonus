@@ -1,6 +1,14 @@
 Release History
 ---------------
 
+0.0.10 (2015-10-20)
++++++++++++++++++++
+
+**Improvements**
+
+- Rename ``circonus.collectd.network`` to ``circonus.collectd.interface`` to
+  reflect what the name of the ``collectd`` module is.
+
 0.0.9 (2015-01-20)
 ++++++++++++++++++
 
