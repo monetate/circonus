@@ -3,7 +3,8 @@
 circonus.collectd.cpu
 ~~~~~~~~~~~~~~~~~~~~~
 
-Create graph data from a ``collectd`` check bundle.
+Create graph data from a ``collectd`` check bundle containing `cpu <https://collectd.org/wiki/index.php/Plugin:CPU>`_
+metrics.
 
 """
 

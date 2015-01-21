@@ -15,6 +15,7 @@ import json
 
 from circonus.annotation import Annotation
 from circonus.collectd.cpu import get_cpu_graph_data
+from circonus.collectd.df import get_df_graph_data
 from circonus.collectd.memory import get_memory_graph_data
 from circonus.collectd.interface import get_interface_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
@@ -274,4 +275,22 @@ class CirconusClient(object):
         r.raise_for_status()
         check_bundle = r.json()[0]
         data = get_interface_graph_data(check_bundle)
+        return self.create("graph", data) if data else None
+
+    def create_collectd_df_graph(self, target, mount_dir):
+        """Create a disk free graph from a ``collectd`` check bundle for ``mount_dir`` on ``target``.
+
+        :param str target: The target of the check bundle to filter for.
+        :param str mount_dir: The mount directory to create the graph for.
+        :rtype: :class:`requests.Response` or :py:const:`None`
+
+        ``target`` is used to filter ``collectd`` check bundles.
+
+        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        data = get_df_graph_data(check_bundle, mount_dir)
         return self.create("graph", data) if data else None

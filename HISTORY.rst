@@ -1,7 +1,15 @@
 Release History
 ---------------
 
-0.0.10 (2015-10-20)
+0.0.11 (2015-01-21)
++++++++++++++++++++
+
+**Improvements**
+
+- Add collectd df graph
+- Add API documentation
+
+0.0.10 (2015-01-20)
 +++++++++++++++++++
 
 **Improvements**
