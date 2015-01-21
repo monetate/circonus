@@ -14,7 +14,7 @@ from colour import Color
 from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
-from circonus.collectd import cpu, interface, memory
+from circonus.collectd import cpu, df, interface, memory
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
@@ -46,6 +46,24 @@ check_bundle = {"_checks": ["/check/123456"],
                             {"name": "cpu`1`cpu`idle", "status": "active", "type": "numeric"},
                             {"name": "cpu`1`cpu`user", "status": "active", "type": "numeric"},
                             {"name": "load`load`1min", "status": "active", "type": "numeric"},
+                            {"name": "df`mnt-mysql`df_complex`used",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-mysql`df_complex`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-mysql`df_complex`reserved",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-solr-home`df_complex`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-solr-home`df_complex`reserved",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-solr-home`df_complex`used",
+                             "status": "active",
+                             "type": "numeric"},
                             {"name": "df`mnt`df_complex`free",
                              "status": "active",
                              "type": "numeric"},
@@ -1020,6 +1038,114 @@ class CollectdInterfaceTestCase(unittest.TestCase):
         self.assertIn("datapoints", data)
         self.assertIn("title", data)
         self.assertEqual("%s interface eth0 bit/s" % check_bundle["target"], data["title"])
+
+
+class CollectdDfTestCase(unittest.TestCase):
+
+    def test_is_mount_dir(self):
+        metric_name = "df`root`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "root"))
+        metric_name = "df`root`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/root"))
+        metric_name = "df`root`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/root/"))
+
+        metric_name = "df`mnt-mysql`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "mnt/mysql"))
+        metric_name = "df`mnt-mysql`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/mnt/mysql"))
+        metric_name = "df`mnt-mysql`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/mnt/mysql/"))
+
+        metric_name = "df`mnt-solr-home`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "mnt/solr-home"))
+        metric_name = "df`mnt-solr-home`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/mnt/solr-home"))
+        metric_name = "df`mnt-solr-home`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/mnt/solr-home/"))
+
+        metric_name = u"df`mnt-solr-home`df_complex`free"
+        self.assertTrue(df.is_mount_dir(metric_name, "/mnt/solr-home/"))
+
+        metric_name = ""
+        self.assertFalse(df.is_mount_dir(metric_name, ""))
+        self.assertFalse(df.is_mount_dir(metric_name, "/root"))
+
+    def test_get_df_metrics(self):
+        self.assertEqual([], df.get_df_metrics({}, "/"))
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("df`")]
+        expected = [m for m in expected if "`root`" in m["name"]]
+        actual = df.get_df_metrics(check_bundle["metrics"], "root")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/root")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/root/")
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("df`")]
+        expected = [m for m in expected if "`mnt-mysql`" in m["name"]]
+        actual = df.get_df_metrics(check_bundle["metrics"], "mnt/mysql")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/mnt/mysql")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/mnt/mysql/")
+        self.assertItemsEqual(expected, actual)
+
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("df`")]
+        expected = [m for m in expected if "`mnt-solr-home`" in m["name"]]
+        actual = df.get_df_metrics(check_bundle["metrics"], "mnt/solr-home")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/mnt/solr-home")
+        self.assertItemsEqual(expected, actual)
+        actual = df.get_df_metrics(check_bundle["metrics"], "/mnt/solr-home/")
+        self.assertItemsEqual(expected, actual)
+
+    def test_get_sorted_df_metrics(self):
+        expected = [m for m in check_bundle["metrics"] if m["name"].startswith("df`")]
+        expected = [m for m in expected if "`mnt-solr-home`" in m["name"]]
+        actual = df.get_sorted_df_metrics(check_bundle["metrics"])
+        self.assertEqual(3, len(actual))
+        self.assertTrue(actual[0]["name"].endswith("reserved"))
+        self.assertTrue(actual[1]["name"].endswith("used"))
+        self.assertTrue(actual[2]["name"].endswith("free"))
+
+    def test_get_df_datapoints(self):
+        self.assertEqual([], df.get_datapoints(check_bundle, []))
+        self.assertEqual([], df.get_datapoints({}, []))
+        metrics = df.get_sorted_df_metrics(check_bundle["metrics"])
+        datapoints = df.get_df_datapoints(check_bundle, metrics)
+        self.assertIsInstance(datapoints, types.ListType)
+        self.assertTrue(len(datapoints) > 0)
+        for dp in datapoints:
+            self.assertIn("derive", dp)
+            self.assertEqual("gauge", dp["derive"])
+            self.assertIn("stack", dp)
+
+    def test_get_df_graph_data(self):
+        self.assertEqual({}, df.get_df_graph_data({}, ""))
+
+        mount_dir = "root"
+        data = df.get_df_graph_data(check_bundle, mount_dir)
+        self.assertIn("title", data)
+        self.assertEqual("%s df %s" % (check_bundle["target"], mount_dir), data["title"])
+        self.assertEqual(0, data["min_left_y"])
+        self.assertEqual(0, data["min_right_y"])
+        self.assertIn("datapoints", data)
+        for dp in data["datapoints"]:
+            self.assertEqual("gauge", dp["derive"])
+            self.assertEqual(0, dp["stack"])
+
+        mount_dir = "/mnt/solr-home"
+        data = df.get_df_graph_data(check_bundle, mount_dir)
+        self.assertIn("title", data)
+        self.assertEqual("%s df %s" % (check_bundle["target"], mount_dir), data["title"])
+        self.assertEqual(0, data["min_left_y"])
+        self.assertEqual(0, data["min_right_y"])
+        self.assertIn("datapoints", data)
+        for dp in data["datapoints"]:
+            self.assertEqual("gauge", dp["derive"])
+            self.assertEqual(0, dp["stack"])
 
 
 class GraphTestCase(unittest.TestCase):
