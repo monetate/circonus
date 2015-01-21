@@ -63,6 +63,14 @@ API Documentation
 
    api
 
+Changelog
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   changelog
+
 .. _Circonus: http://www.circonus.com/
 .. _REST API: https://login.circonus.com/resources/api
 .. _custom Circonus HTTP request headers: https://login.circonus.com/resources/api#authentication
