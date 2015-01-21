@@ -260,10 +260,11 @@ class CirconusClient(object):
         data = get_memory_graph_data(check_bundle)
         return self.create("graph", data) if data else None
 
-    def create_collectd_interface_graph(self, target):
+    def create_collectd_interface_graph(self, target, interface_name="eth0"):
         """Create an interface graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
+        :param str interface_name: (optional) The interface name, e.g., "eth0".
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -274,7 +275,7 @@ class CirconusClient(object):
         r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
         r.raise_for_status()
         check_bundle = r.json()[0]
-        data = get_interface_graph_data(check_bundle)
+        data = get_interface_graph_data(check_bundle, interface_name)
         return self.create("graph", data) if data else None
 
     def create_collectd_df_graph(self, target, mount_dir):
