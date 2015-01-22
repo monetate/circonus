@@ -333,6 +333,16 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
 
+    @responses.activate
+    def test_log_http_error_raises_http_error(self):
+        cid = "graph/12345"
+        responses.add(responses.GET, get_api_url(cid),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            self.c.get(cid)
+
     def test_annotation_context_manager(self):
         a = self.c.annotation(self.c, "title", "category")
         with patch("circonus.client.CirconusClient.create") as create_patch:
@@ -607,11 +617,24 @@ class CirconusClientTestCase(unittest.TestCase):
     @responses.activate
     def test_create_collectd_graphs_log_error(self):
         target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        responses.add(responses.POST, get_api_url("graph"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
         with patch("circonus.client.log") as log_patch:
-            success, rs = self.c.create_collectd_graphs(target)
-            self.assertFalse(success)
-            self.assertIsInstance(rs, types.ListType)
+            self.c.create_collectd_graphs(target)
             self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
+
+    @responses.activate
+    def test_get_collectd_check_bundle_raises_http_error(self):
+        responses.add(responses.GET, get_api_url("check_bundle"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            self.c.get_collectd_check_bundle("10.0.0.1")
 
     @responses.activate
     def test_get_collectd_check_bundle(self):
@@ -624,10 +647,6 @@ class CirconusClientTestCase(unittest.TestCase):
     @responses.activate
     def test_create_collectd_graphs_no_metrics(self):
         target = "10.0.0.1"
-        success, rs = self.c.create_collectd_graphs(target)
-        self.assertFalse(success)
-        self.assertIsInstance(rs, types.ListType)
-
         cb = {"_checks": ["/check_bundle/12345"],
               "target": target,
               "type": "collectd",
@@ -635,11 +654,26 @@ class CirconusClientTestCase(unittest.TestCase):
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
                       content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
+            post_patch.return_value = response_mock = MagicMock()
+            response_mock.status_code = 200
             success, rs = self.c.create_collectd_graphs(target)
             post_patch.assert_called()
             self.assertTrue(success)
+            self.assertIsInstance(rs, types.ListType)
             self.assertEqual(1, len(rs))
             self.assertEqual(1, post_patch.call_count)
+
+    @responses.activate
+    def test_create_collectd_graphs_logs_http_error(self):
+        responses.add(responses.GET, get_api_url("check_bundle"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with patch("circonus.client.log") as log_patch:
+            success, rs = self.c.create_collectd_graphs("10.0.0.1")
+            self.assertFalse(success)
+            self.assertEqual([], rs)
+            self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
 
     @responses.activate
     def test_create_collectd_graphs(self):
@@ -647,6 +681,8 @@ class CirconusClientTestCase(unittest.TestCase):
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
                       content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
+            post_patch.return_value = response_mock = MagicMock()
+            response_mock.status_code = 200
             success, rs = self.c.create_collectd_graphs(target)
             post_patch.assert_called()
             self.assertTrue(success)
@@ -661,6 +697,17 @@ class AnnotationTestCase(unittest.TestCase):
         cls.api_app_name = "TEST"
         cls.api_token = str(uuid4())
         cls.c = CirconusClient(cls.api_app_name, cls.api_token)
+
+    def test_create_raises_http_error(self):
+        a = Annotation(self.c, "title", "category")
+        a.start = datetime.utcnow()
+        a.stop = a.start + timedelta(seconds=1)
+        responses.add(responses.GET, get_api_url(Annotation.RESOURCE_PATH),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            a.create()
 
     def test_create(self):
         a = Annotation(self.c, "title", "category")

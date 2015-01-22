@@ -20,6 +20,7 @@ from circonus.collectd.graph import get_collectd_graph_data
 from circonus.collectd.memory import get_memory_graph_data
 from circonus.collectd.interface import get_interface_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
+from requests import codes as status_codes
 from requests.exceptions import HTTPError
 
 import requests
@@ -70,7 +71,11 @@ def with_common_tags(f):
 
 
 def log_http_error(f):
-    """Decorator for :py:mod:`logging` any :class:`~requests.exceptions.HTTPError` raised by a request."""
+    """Decorator for :py:mod:`logging` any :class:`~requests.exceptions.HTTPError` raised by a request.
+
+    :raises: :class:`requests.exceptions.HTTPError`
+
+    """
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
@@ -79,6 +84,7 @@ def log_http_error(f):
         except HTTPError as e:
             log.error("%s: %s (%s)", e.response.status_code, e.response.json()["code"],
                       e.response.json()["message"])
+            raise
         return r
     return wrapper
 
@@ -240,7 +246,6 @@ class CirconusClient(object):
 
         """
         r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
         check_bundle = r.json()[0]
         return check_bundle
 
@@ -335,7 +340,7 @@ class CirconusClient(object):
         if interface_names is None:
             interface_names = ["eth0"]
 
-        success = False
+        successes = []
         responses = []
 
         try:
@@ -343,10 +348,10 @@ class CirconusClient(object):
             graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs)
             for d in graph_data:
                 r = self.create("graph", d)
-                r.raise_for_status()
+                successes.append(status_codes.OK == r.status_code)
                 responses.append(r)
-            success = True
-        except Exception as e:
+        except HTTPError as e:
+            successes.append(False)
             log.error("collectd graphs could not be created: %s", e)
 
-        return success, responses
+        return all(successes), responses
