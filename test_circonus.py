@@ -343,7 +343,11 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertIsNotNone(a.stop)
             create_patch.assert_called()
 
+    @responses.activate
     def test_create_annotation(self):
+        responses.add(responses.POST, get_api_url(Annotation.RESOURCE_PATH),
+                      body=json.dumps({"message": "test", "code": "test"}), status=403,
+                      content_type="application/json")
         with self.assertRaises(HTTPError):
             self.c.create_annotation("title", "category")
 
