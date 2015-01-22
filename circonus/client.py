@@ -16,6 +16,7 @@ import json
 from circonus.annotation import Annotation
 from circonus.collectd.cpu import get_cpu_graph_data
 from circonus.collectd.df import get_df_graph_data
+from circonus.collectd.graph import get_collectd_graph_data
 from circonus.collectd.memory import get_memory_graph_data
 from circonus.collectd.interface import get_interface_graph_data
 from circonus.tag import get_tags_with, get_telemetry_tag, is_taggable
@@ -297,3 +298,63 @@ class CirconusClient(object):
         check_bundle = r.json()[0]
         data = get_df_graph_data(check_bundle, mount_dir)
         return self.create("graph", data) if data else None
+
+    def get_collectd_check_bundle(self, target):
+        """Get a ``collectd`` check bundle for ``target``.
+
+        :param str target: The target to filter the check bundle.
+        :rtype: :py:class:`dict`
+
+        The *first* ``collectd`` check bundle for ``target`` will be returned.  A given ``target`` should not have
+        more than one ``collectd`` check bundle at any given moment.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        return check_bundle
+
+    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None):
+        """Create several graphs from a ``collectd`` check bundle.
+
+        :param str target: The target of the check bundle to filter for.
+        :param list interface_name: (optional) The interface names to create ``interface`` graphs for, e.g., ``["eth0"]``.
+        :param list mount_dirs: (optional) The mount directories to create ``df`` graphs for, e.g., ``["/root", "/mnt"]``.
+        :rtype: (:py:class:`bool`, :py:class:`list`)
+
+        ``target`` is used to filter ``collectd`` check bundles.
+
+        Only the first ``collectd`` check bundle will be used as no ``target`` should have more than a single
+        ``collectd`` check bundle at once.
+
+        ``mount_dirs`` should be a :py:class:`list` of directories where devices are mounted.  ``df`` graphs will be
+        created for each.
+
+        ``interface_names`` should be a :py:class:`list` of network interface device names.  ``interface`` graphs will
+        be created for each.
+
+        Return :py:const:`True` if all ``collectd`` graphs were created successfully, :py:const:`False` otherwise,
+        along with a :py:class:`list` of :class:`requests.Response` instances for requests made.
+
+        """
+        if mount_dirs is None:
+            mount_dirs = ["root"]
+
+        if interface_names is None:
+            interface_names = ["eth0"]
+
+        success = False
+        responses = []
+
+        try:
+            check_bundle = self.get_collectd_check_bundle(target)
+            graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs)
+            for d in graph_data:
+                r = self.create("graph", d)
+                r.raise_for_status()
+                responses.append(r)
+            success = True
+        except Exception as e:
+            log.error("collectd graphs could not be created: %s", e)
+
+        return success, responses

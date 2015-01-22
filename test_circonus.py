@@ -15,9 +15,11 @@ from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
 from circonus.collectd import cpu, df, interface, memory
+from circonus.collectd.graph import get_collectd_graph_data
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
+import requests
 import responses
 
 
@@ -597,6 +599,55 @@ class CirconusClientTestCase(unittest.TestCase):
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
+
+    @responses.activate
+    def test_create_collectd_graphs_log_error(self):
+        target = "10.0.0.1"
+        with patch("circonus.client.log") as log_patch:
+            success, rs = self.c.create_collectd_graphs(target)
+            self.assertFalse(success)
+            self.assertIsInstance(rs, types.ListType)
+            self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
+
+    @responses.activate
+    def test_get_collectd_check_bundle(self):
+        target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        cb = self.c.get_collectd_check_bundle(target)
+        self.assertIsInstance(cb, types.DictType)
+
+    @responses.activate
+    def test_create_collectd_graphs_no_metrics(self):
+        target = "10.0.0.1"
+        success, rs = self.c.create_collectd_graphs(target)
+        self.assertFalse(success)
+        self.assertIsInstance(rs, types.ListType)
+
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": []}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            success, rs = self.c.create_collectd_graphs(target)
+            post_patch.assert_called()
+            self.assertTrue(success)
+            self.assertEqual(1, len(rs))
+            self.assertEqual(1, post_patch.call_count)
+
+    @responses.activate
+    def test_create_collectd_graphs(self):
+        target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            success, rs = self.c.create_collectd_graphs(target)
+            post_patch.assert_called()
+            self.assertTrue(success)
+            self.assertEqual(4, len(rs))
+            self.assertEqual(4, post_patch.call_count)
 
 
 class AnnotationTestCase(unittest.TestCase):
@@ -1181,6 +1232,22 @@ class CollectdDfTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+
+class CollectdGraphTestCase(unittest.TestCase):
+
+    def test_get_collectd_graph_data(self):
+        data = get_collectd_graph_data({}, [], [])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual([], data)
+
+        data = get_collectd_graph_data(check_bundle, [], [])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(2, len(data))
+
+        data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(4, len(data))
 
 
 class GraphTestCase(unittest.TestCase):
