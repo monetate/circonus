@@ -229,6 +229,21 @@ class CirconusClient(object):
         a.create()
         return a
 
+    def get_collectd_check_bundle(self, target):
+        """Get a ``collectd`` check bundle for ``target``.
+
+        :param str target: The target to filter the check bundle.
+        :rtype: :py:class:`dict`
+
+        The *first* ``collectd`` check bundle for ``target`` will be returned.  A given ``target`` should not have
+        more than one ``collectd`` check bundle at any given moment.
+
+        """
+        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
+        r.raise_for_status()
+        check_bundle = r.json()[0]
+        return check_bundle
+
     def create_collectd_cpu_graph(self, target):
         """Create a CPU graph from a ``collectd`` check bundle for ``target``.
 
@@ -240,9 +255,7 @@ class CirconusClient(object):
         :py:const:`None` is returned if no data to create the graph could be found for ``target``.
 
         """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
-        check_bundle = r.json()[0]
+        check_bundle = self.get_collectd_check_bundle(target)
         data = get_cpu_graph_data(check_bundle)
         return self.create("graph", data) if data else None
 
@@ -257,9 +270,7 @@ class CirconusClient(object):
         :py:const:`None` is returned if no data to create the graph could be found for ``target``.
 
         """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
-        check_bundle = r.json()[0]
+        check_bundle = self.get_collectd_check_bundle(target)
         data = get_memory_graph_data(check_bundle)
         return self.create("graph", data) if data else None
 
@@ -275,9 +286,7 @@ class CirconusClient(object):
         :py:const:`None` is returned if no data to create the graph could be found for ``target``.
 
         """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
-        check_bundle = r.json()[0]
+        check_bundle = self.get_collectd_check_bundle(target)
         data = get_interface_graph_data(check_bundle, interface_name)
         return self.create("graph", data) if data else None
 
@@ -293,26 +302,9 @@ class CirconusClient(object):
         :py:const:`None` is returned if no data to create the graph could be found for ``target``.
 
         """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
-        check_bundle = r.json()[0]
+        check_bundle = self.get_collectd_check_bundle(target)
         data = get_df_graph_data(check_bundle, mount_dir)
         return self.create("graph", data) if data else None
-
-    def get_collectd_check_bundle(self, target):
-        """Get a ``collectd`` check bundle for ``target``.
-
-        :param str target: The target to filter the check bundle.
-        :rtype: :py:class:`dict`
-
-        The *first* ``collectd`` check bundle for ``target`` will be returned.  A given ``target`` should not have
-        more than one ``collectd`` check bundle at any given moment.
-
-        """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        r.raise_for_status()
-        check_bundle = r.json()[0]
-        return check_bundle
 
     def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None):
         """Create several graphs from a ``collectd`` check bundle.
