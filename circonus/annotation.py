@@ -84,5 +84,4 @@ class Annotation(object):
             "rel_metrics": self.rel_metrics
         }
         self.response = self.client.create(self.RESOURCE_PATH, data)
-        self.response.raise_for_status()
         return self

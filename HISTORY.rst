@@ -1,6 +1,17 @@
 Release History
 ---------------
 
+0.0.12 (2015-01-22)
++++++++++++++++++++
+
+**Improvements**
+
+- Add client method to create all supported collectd plugin graphs for a
+  specific target at once.
+- Update ``circonus.collectd.cpu`` API to act like the other plugin modules.
+- Change exception handling to raise HTTPError in log decorator.
+- Add API documentation
+
 0.0.11 (2015-01-21)
 +++++++++++++++++++
 

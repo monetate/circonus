@@ -94,6 +94,21 @@ def get_stacked_cpu_metrics(metrics, hide_idle=True):
     return stacked_metrics
 
 
+def get_cpu_datapoints(check_bundle, metrics):
+    """Get a list of datapoints from *sorted* ``metrics``.
+
+    :param dict check_bundle: The check bundle.
+    :param list metrics: Sorted CPU metrics.
+    :rtype: :py:class`list`
+
+    """
+    datapoints = []
+    for cid in check_bundle.get("_checks", []):
+        check_id = get_check_id_from_cid(cid)
+        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "counter"}))
+    return datapoints
+
+
 def get_cpu_graph_data(check_bundle):
     """Get graph data for ``check_bundle``.
 
@@ -104,10 +119,11 @@ def get_cpu_graph_data(check_bundle):
     <https://login.circonus.com/resources/api/calls/graph>`_.
 
     """
-    metrics = get_stacked_cpu_metrics(get_cpu_metrics(get_metrics(check_bundle, CPU_METRIC_RE)))
-    datapoints = []
-    for cid in check_bundle["_checks"]:
-        check_id = get_check_id_from_cid(cid)
-        datapoints.extend(get_datapoints(check_id, metrics, {"derive": "counter"}))
-    custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
-    return get_graph_data(check_bundle, datapoints, custom_data)
+    data = {}
+    metrics = get_cpu_metrics(get_metrics(check_bundle, CPU_METRIC_RE))
+    if metrics:
+        stacked_metrics = get_stacked_cpu_metrics(metrics)
+        datapoints = get_cpu_datapoints(check_bundle, stacked_metrics)
+        custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+        data = get_graph_data(check_bundle, datapoints, custom_data)
+    return data

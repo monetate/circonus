@@ -15,9 +15,11 @@ from circonus import CirconusClient, graph, metric, tag, util
 from circonus.annotation import Annotation
 from circonus.client import API_BASE_URL, get_api_url
 from circonus.collectd import cpu, df, interface, memory
+from circonus.collectd.graph import get_collectd_graph_data
 from mock import patch, MagicMock
 from requests.exceptions import HTTPError
 
+import requests
 import responses
 
 
@@ -331,6 +333,16 @@ class CirconusClientTestCase(unittest.TestCase):
         self.assertEqual(expected, get_api_url("/path/to/resource"))
         self.assertEqual(expected, get_api_url("/path/to/resource/"))
 
+    @responses.activate
+    def test_log_http_error_raises_http_error(self):
+        cid = "graph/12345"
+        responses.add(responses.GET, get_api_url(cid),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            self.c.get(cid)
+
     def test_annotation_context_manager(self):
         a = self.c.annotation(self.c, "title", "category")
         with patch("circonus.client.CirconusClient.create") as create_patch:
@@ -341,7 +353,11 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertIsNotNone(a.stop)
             create_patch.assert_called()
 
+    @responses.activate
     def test_create_annotation(self):
+        responses.add(responses.POST, get_api_url(Annotation.RESOURCE_PATH),
+                      body=json.dumps({"message": "test", "code": "test"}), status=403,
+                      content_type="application/json")
         with self.assertRaises(HTTPError):
             self.c.create_annotation("title", "category")
 
@@ -473,7 +489,6 @@ class CirconusClientTestCase(unittest.TestCase):
                         "_last_modified_by": "/user/1234",
                         "display_name": "%s collectd" % target,
                         "target": target,
-                        "tags": ["telemetry:collectd"],
                         "type": "collectd",
                         "notes": None,
                         "period": 60,
@@ -487,12 +502,12 @@ class CirconusClientTestCase(unittest.TestCase):
                                    "submission_target": "10.0.0.2:25826",
                                    "security_level": "0"},
                         "_last_modified": 1416618604}
-        data = {"title": "10.0.0.1 cpu", "tags": ["telemetry:collectd"], "max_left_y": 100, "datapoints": []}
+        data = {}
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
                       content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
-            self.c.create_collectd_cpu_graph(target)
-            post_patch.assert_called_with(get_api_url("graph"), headers=self.c.api_headers, data=json.dumps(data))
+            self.assertIsNone(self.c.create_collectd_cpu_graph(target))
+            post_patch.assert_not_called()
 
     @responses.activate
     def test_create_collectd_memory_graph_no_memory_metrics(self):
@@ -599,6 +614,81 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+    @responses.activate
+    def test_create_collectd_graphs_log_error(self):
+        target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        responses.add(responses.POST, get_api_url("graph"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with patch("circonus.client.log") as log_patch:
+            self.c.create_collectd_graphs(target)
+            self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
+
+    @responses.activate
+    def test_get_collectd_check_bundle_raises_http_error(self):
+        responses.add(responses.GET, get_api_url("check_bundle"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            self.c.get_collectd_check_bundle("10.0.0.1")
+
+    @responses.activate
+    def test_get_collectd_check_bundle(self):
+        target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        cb = self.c.get_collectd_check_bundle(target)
+        self.assertIsInstance(cb, types.DictType)
+
+    @responses.activate
+    def test_create_collectd_graphs_no_metrics(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": []}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            post_patch.return_value = response_mock = MagicMock()
+            response_mock.status_code = 200
+            success, rs = self.c.create_collectd_graphs(target)
+            post_patch.assert_called()
+            self.assertTrue(success)
+            self.assertIsInstance(rs, types.ListType)
+            self.assertEqual(1, len(rs))
+            self.assertEqual(1, post_patch.call_count)
+
+    @responses.activate
+    def test_create_collectd_graphs_logs_http_error(self):
+        responses.add(responses.GET, get_api_url("check_bundle"),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with patch("circonus.client.log") as log_patch:
+            success, rs = self.c.create_collectd_graphs("10.0.0.1")
+            self.assertFalse(success)
+            self.assertEqual([], rs)
+            self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
+
+    @responses.activate
+    def test_create_collectd_graphs(self):
+        target = "10.0.0.1"
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
+                      content_type="application/json")
+        with patch("circonus.client.requests.post") as post_patch:
+            post_patch.return_value = response_mock = MagicMock()
+            response_mock.status_code = 200
+            success, rs = self.c.create_collectd_graphs(target)
+            post_patch.assert_called()
+            self.assertTrue(success)
+            self.assertEqual(4, len(rs))
+            self.assertEqual(4, post_patch.call_count)
+
 
 class AnnotationTestCase(unittest.TestCase):
 
@@ -607,6 +697,17 @@ class AnnotationTestCase(unittest.TestCase):
         cls.api_app_name = "TEST"
         cls.api_token = str(uuid4())
         cls.c = CirconusClient(cls.api_app_name, cls.api_token)
+
+    def test_create_raises_http_error(self):
+        a = Annotation(self.c, "title", "category")
+        a.start = datetime.utcnow()
+        a.stop = a.start + timedelta(seconds=1)
+        responses.add(responses.GET, get_api_url(Annotation.RESOURCE_PATH),
+                      body=json.dumps({"message": "test", "code": "test"}),
+                      status=500,
+                      content_type="application/json")
+        with self.assertRaises(HTTPError):
+            a.create()
 
     def test_create(self):
         a = Annotation(self.c, "title", "category")
@@ -942,6 +1043,7 @@ class CollectdCpuTestCase(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_get_stacked_cpu_metrics(self):
+        self.assertEqual([], cpu.get_stacked_cpu_metrics([]))
         stacked_metrics = cpu.get_stacked_cpu_metrics(self.metrics)
         for m in stacked_metrics:
             self.assertIn(str(m["stack"]), m["name"])
@@ -955,7 +1057,14 @@ class CollectdCpuTestCase(unittest.TestCase):
             self.assertNotIn("hidden", m)
         self.assertNotEqual(self.metrics, stacked_metrics)
 
+    def test_get_cpu_datapoints(self):
+        self.assertEqual([], cpu.get_cpu_datapoints({}, []))
+        metrics = cpu.get_stacked_cpu_metrics(self.metrics)
+        datapoints = cpu.get_cpu_datapoints(check_bundle, metrics)
+        self.assertIsInstance(datapoints, types.ListType)
+
     def test_get_cpu_graph_data(self):
+        self.assertEqual({}, cpu.get_cpu_graph_data({}))
         data = cpu.get_cpu_graph_data(check_bundle)
         self.assertIn("tags", data)
         self.assertEqual(["telemetry:collectd"], data["tags"])
@@ -1174,6 +1283,22 @@ class CollectdDfTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+
+class CollectdGraphTestCase(unittest.TestCase):
+
+    def test_get_collectd_graph_data(self):
+        data = get_collectd_graph_data({}, [], [])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual([], data)
+
+        data = get_collectd_graph_data(check_bundle, [], [])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(2, len(data))
+
+        data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"])
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(4, len(data))
 
 
 class GraphTestCase(unittest.TestCase):
