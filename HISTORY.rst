@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.13 (2015-01-22)
++++++++++++++++++++
+
+**Bug fixes**
+
+- Require the ``colour`` package at setup time
+
 0.0.12 (2015-01-22)
 +++++++++++++++++++
 
