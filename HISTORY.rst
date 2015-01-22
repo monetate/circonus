@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.14 (2015-01-22)
++++++++++++++++++++
+
+**Bug fixes**
+
+- Hard code version in setup to avoid setup dependency
+
 0.0.13 (2015-01-22)
 +++++++++++++++++++
 

@@ -4,8 +4,6 @@ from setuptools import find_packages, setup
 
 import codecs
 
-import circonus
-
 
 with codecs.open("README.rst", "r", "utf-8") as f:
     readme = f.read()
@@ -14,7 +12,7 @@ with codecs.open("HISTORY.rst", "r", "utf-8") as f:
 
 setup(
     name="circonus",
-    version=circonus.__version__,
+    version="0.0.14",
     description="Interact with the Circonus REST API.",
     long_description=readme + "\n\n" + history,
     author="Monetate Inc.",
@@ -29,6 +27,5 @@ setup(
     ],
     keywords="circonus monitoring analytics",
     packages=find_packages(),
-    install_requires=["colour", "requests"],
-    setup_requires=["colour"]
+    install_requires=["colour", "requests"]
 )
