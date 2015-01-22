@@ -340,18 +340,13 @@ class CirconusClient(object):
         if interface_names is None:
             interface_names = ["eth0"]
 
-        successes = []
         responses = []
-
         try:
             check_bundle = self.get_collectd_check_bundle(target)
             graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs)
             for d in graph_data:
-                r = self.create("graph", d)
-                successes.append(status_codes.OK == r.status_code)
-                responses.append(r)
+                responses.append(self.create("graph", d))
         except HTTPError as e:
-            successes.append(False)
             log.error("collectd graphs could not be created: %s", e)
 
-        return all(successes), responses
+        return responses and all([status_codes.OK == r.status_code for r in responses]), responses
