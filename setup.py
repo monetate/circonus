@@ -12,7 +12,7 @@ with codecs.open("HISTORY.rst", "r", "utf-8") as f:
 
 setup(
     name="circonus",
-    version="0.0.14",
+    version="0.0.15",
     description="Interact with the Circonus REST API.",
     long_description=readme + "\n\n" + history,
     author="Monetate Inc.",

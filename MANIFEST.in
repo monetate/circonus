@@ -1,0 +1,1 @@
+include HISTORY.rst LICENSE.txt README.rst requirements.txt test_circonus.py

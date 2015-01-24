@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.15 (2015-01-24)
++++++++++++++++++++
+
+**Bug fixes**
+
+- Add ``MANIFEST.in`` to include required distribution files.
+
 0.0.14 (2015-01-22)
 +++++++++++++++++++
 
