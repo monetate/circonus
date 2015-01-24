@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.16 (2015-01-24)
++++++++++++++++++++
+
+**Improvements**
+
+- Make the ``get_tag_string`` function public.
+
 0.0.15 (2015-01-24)
 +++++++++++++++++++
 
