@@ -25,20 +25,6 @@ TAGGABLE_RESOURCES = [
 TAG_SEP = ":"
 
 
-def _get_tag_string(tag, category=None):
-    """Get a string representing ``tag``.
-
-    :param str tag: The tag.
-    :param str category: (optional) The category.
-    :rtype: :py:class:`str`
-
-    Circonus requires categorized tags to be a string of the form, "category:tag".  Uncategorized tags are simply,
-    "tag".
-
-    """
-    return TAG_SEP.join([category, tag]) if category else tag
-
-
 def _get_updated_tags(update_function, *args):
     """Get an updated list of tags.
 
@@ -60,6 +46,20 @@ def _get_updated_tags(update_function, *args):
         if existing_tags_set != updated_tags_set:
             updated_tags = list(updated_tags_set)
     return updated_tags
+
+
+def get_tag_string(tag, category=None):
+    """Get a string representing ``tag``.
+
+    :param str tag: The tag.
+    :param str category: (optional) The category.
+    :rtype: :py:class:`str`
+
+    Circonus requires categorized tags to be a string of the form, "category:tag".  Uncategorized tags are simply,
+    "tag".
+
+    """
+    return TAG_SEP.join([category, tag]) if category else tag
 
 
 def is_taggable(cid):
@@ -121,4 +121,4 @@ def get_telemetry_tag(check_bundle):
     filtering check bundles by the source of telemetry data easier in the Circonus UI.
 
     """
-    return _get_tag_string(check_bundle["type"], "telemetry")
+    return get_tag_string(check_bundle["type"], "telemetry")

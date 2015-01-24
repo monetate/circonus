@@ -824,9 +824,9 @@ class TagTestCase(unittest.TestCase):
         t = "tag"
         c = "category"
         expected = c + tag.TAG_SEP + t
-        self.assertEqual(expected, tag._get_tag_string(t, c))
+        self.assertEqual(expected, tag.get_tag_string(t, c))
         expected = t
-        self.assertEqual(expected, tag._get_tag_string(t))
+        self.assertEqual(expected, tag.get_tag_string(t))
 
     def test_get_telemetry_tag(self):
         t = "collectd"
