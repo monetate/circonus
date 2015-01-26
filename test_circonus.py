@@ -617,6 +617,11 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+            title = "test title"
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(target, title))
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(title, actual["title"])
+
     @responses.activate
     def test_create_collectd_interface_graph(self):
         target = "10.0.0.1"
@@ -1239,6 +1244,11 @@ class CollectdMemoryTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+        expected = "test title"
+        data = memory.get_memory_graph_data(check_bundle, expected)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
 
 
 class CollectdInterfaceTestCase(unittest.TestCase):
