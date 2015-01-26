@@ -89,7 +89,7 @@ def get_metrics_with_status(metrics, status, metric_re=None):
 
     :param list metrics: The metrics to set statuses for.
     :param str status: The status to set on each metric.
-    :param re metric_re: The compiled regular expression used to match metrics to update.
+    :param re metric_re: (optional) The compiled regular expression used to match metrics to update.
     :rtype: :py:class:`list`
 
     ``metrics`` is not modified by this function.
