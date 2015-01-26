@@ -8,6 +8,7 @@ Manipulate check metrics.
 """
 
 from collections import OrderedDict
+from copy import deepcopy
 
 from circonus.util import colors
 
@@ -81,3 +82,23 @@ def get_datapoints(check_id, metrics, custom=None):
         dp.update(custom)
         datapoints.append(dp)
     return datapoints
+
+
+def get_metrics_with_status(metrics, status, metric_re=None):
+    """Get a copy of ``metrics`` with each status attribute value set to ``status``.
+
+    :param list metrics: The metrics to set statuses for.
+    :param str status: The status to set on each metric.
+    :param re metric_re: (optional) The compiled regular expression used to match metrics to update.
+    :rtype: :py:class:`list`
+
+    ``metrics`` is not modified by this function.
+
+    """
+    updated_status = {"status": status}
+    updated_metrics = deepcopy(metrics)
+    if metric_re:
+        [m.update(updated_status) for m in updated_metrics if metric_re.search(m["name"])]
+    else:
+        [m.update(updated_status) for m in updated_metrics]
+    return updated_metrics
