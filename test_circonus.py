@@ -681,6 +681,12 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+            title = "test title"
+            self.assertIsNotNone(self.c.create_collectd_df_graph(target, "/mnt/mysql", title))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(title, actual["title"])
+
     @responses.activate
     def test_create_collectd_graphs_log_error(self):
         target = "10.0.0.1"
@@ -1439,6 +1445,11 @@ class CollectdDfTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+        expected = "test title"
+        data = df.get_df_graph_data(check_bundle, mount_dir, expected)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
 
 
 class CollectdGraphTestCase(unittest.TestCase):

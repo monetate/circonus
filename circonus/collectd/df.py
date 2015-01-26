@@ -93,12 +93,15 @@ def get_df_datapoints(check_bundle, metrics):
     return datapoints
 
 
-def get_df_graph_data(check_bundle, mount_dir):
+def get_df_graph_data(check_bundle, mount_dir, title=None):
     """Get graph data for ``check_bundle``.
 
     :param dict check_bundle: The check bundle to create graph data with.
+    :param str title: (optional) The title to use for the graph.
     :param str mount_dir: The mount directory to create graph data for.
     :rtype: :py:class:`dict`
+
+    ``title`` defaults to using ``check_bundle["target"]``.
 
     The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
     <https://login.circonus.com/resources/api/calls/graph>`_.
@@ -109,6 +112,7 @@ def get_df_graph_data(check_bundle, mount_dir):
     if df_metrics:
         sorted_df_metrics = get_sorted_df_metrics(df_metrics)
         datapoints = get_df_datapoints(check_bundle, sorted_df_metrics)
-        custom_data = {"title": "%s df %s" % (check_bundle["target"], mount_dir), "min_left_y": 0, "min_right_y": 0}
+        graph_title = title if title else "%s df %s" % (check_bundle["target"], mount_dir)
+        custom_data = {"title": graph_title, "min_left_y": 0, "min_right_y": 0}
         data = get_graph_data(check_bundle, datapoints, custom_data)
     return data
