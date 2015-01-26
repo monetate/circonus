@@ -96,13 +96,15 @@ def get_interface_graph_data(check_bundle, interface_name="eth0", title=None):
     :param str interface_name: (optional) The interface name, e.g., "eth0".
     :rtype: :py:class:`dict`
 
-    ``title`` defaults to using ``check_bundle["target"]``.
+    ``title`` defaults to using ``check_bundle["target"]``.  ``interface_name`` and ``bit/s`` will be appended to the
+    title.
 
     The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
     <https://login.circonus.com/resources/api/calls/graph>`_.
 
     """
     datapoints = get_interface_datapoints(check_bundle, interface_name)
-    graph_title = title if title else "%s interface %s bit/s" % (check_bundle["target"], interface_name)
+    graph_title = title if title else "%s interface" % check_bundle["target"]
+    graph_title = "%s %s bit/s" % (graph_title, interface_name)
     custom_data = {"title": graph_title}
     return get_graph_data(check_bundle, datapoints, custom_data)

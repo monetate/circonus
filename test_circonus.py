@@ -648,10 +648,11 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertEqual(expected, actual)
 
             title = "test title"
+            expected = title + " eth0 bit/s"
             self.assertIsNotNone(self.c.create_collectd_interface_graph(target, title=title))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
-            self.assertEqual(title, actual["title"])
+            self.assertEqual(expected, actual["title"])
 
     @responses.activate
     def test_create_collectd_df_graph(self):
@@ -1333,8 +1334,9 @@ class CollectdInterfaceTestCase(unittest.TestCase):
         self.assertIn("title", data)
         self.assertEqual("%s interface eth0 bit/s" % check_bundle["target"], data["title"])
 
-        expected = "test title"
-        data = interface.get_interface_graph_data(check_bundle, title=expected)
+        title = "test title"
+        expected = title + " eth0 bit/s"
+        data = interface.get_interface_graph_data(check_bundle, title=title)
         actual = data["title"]
         self.assertEqual(expected, actual)
 
@@ -1481,7 +1483,7 @@ class CollectdGraphTestCase(unittest.TestCase):
                 elif memory.MEMORY_METRIC_RE.match(dp["name"]):
                     self.assertEqual(titles["memory"], d["title"])
                 elif dp["name"].startswith("interface"):
-                    self.assertEqual(titles["interface"], d["title"])
+                    self.assertEqual(titles["interface"] + " eth0 bit/s", d["title"])
                 elif df.DF_METRIC_RE.match(dp["name"]):
                     self.assertEqual(titles["df"], d["title"])
 
