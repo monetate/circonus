@@ -95,12 +95,10 @@ def get_metrics_with_status(metrics, status, metric_re=None):
     ``metrics`` is not modified by this function.
 
     """
-    metrics_with_status = deepcopy(metrics)
+    updated_status = {"status": status}
+    updated_metrics = deepcopy(metrics)
     if metric_re:
-        for m in metrics_with_status:
-            if metric_re.search(m["name"]):
-                m.update({"status": status})
+        [m.update(updated_status) for m in updated_metrics if metric_re.search(m["name"])]
     else:
-        for m in metrics_with_status:
-            m.update({"status": status})
-    return metrics_with_status
+        [m.update(updated_status) for m in updated_metrics]
+    return updated_metrics
