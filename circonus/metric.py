@@ -84,17 +84,23 @@ def get_datapoints(check_id, metrics, custom=None):
     return datapoints
 
 
-def get_metrics_with_status(metrics, status):
+def get_metrics_with_status(metrics, status, metric_re=None):
     """Get a copy of ``metrics`` with each status attribute value set to ``status``.
 
     :param list metrics: The metrics to set statuses for.
     :param str status: The status to set on each metric.
+    :param re metric_re: The compiled regular expression used to match metrics to update.
     :rtype: :py:class:`list`
 
     ``metrics`` is not modified by this function.
 
     """
     metrics_with_status = deepcopy(metrics)
-    for m in metrics_with_status:
-        m.update({"status": status})
+    if metric_re:
+        for m in metrics_with_status:
+            if metric_re.search(m["name"]):
+                m.update({"status": status})
+    else:
+        for m in metrics_with_status:
+            m.update({"status": status})
     return metrics_with_status
