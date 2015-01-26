@@ -96,8 +96,8 @@ def get_interface_graph_data(check_bundle, interface_name="eth0", title=None):
     :param str interface_name: (optional) The interface name, e.g., "eth0".
     :rtype: :py:class:`dict`
 
-    ``title`` defaults to using ``check_bundle["target"]``.  ``interface_name`` and ``bit/s`` will be appended to the
-    title.
+    ``title`` defaults to using ``check_bundle["target"]``.  ``interface_name`` and ``bit/s`` will be appended to
+    ``title``.
 
     The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
     <https://login.circonus.com/resources/api/calls/graph>`_.
