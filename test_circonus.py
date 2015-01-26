@@ -995,6 +995,43 @@ class MetricTestCase(unittest.TestCase):
             self.assertIn("custom", dp)
             self.assertEqual("attribute", dp["custom"])
 
+    def test_get_metrics_with_status(self):
+        metrics = [{'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                   {'status': 'available', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
+        expected = [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                    {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]
+        actual = metric.get_metrics_with_status(metrics, "active")
+        self.assertEqual(expected, actual)
+        self.assertNotEqual(expected, metrics)
+
 
 class CollectdCpuTestCase(unittest.TestCase):
 
