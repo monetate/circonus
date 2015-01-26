@@ -647,6 +647,12 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+            title = "test title"
+            self.assertIsNotNone(self.c.create_collectd_interface_graph(target, title=title))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(title, actual["title"])
+
     @responses.activate
     def test_create_collectd_df_graph(self):
         target = "10.0.0.1"
@@ -1320,6 +1326,11 @@ class CollectdInterfaceTestCase(unittest.TestCase):
         self.assertIn("datapoints", data)
         self.assertIn("title", data)
         self.assertEqual("%s interface eth0 bit/s" % check_bundle["target"], data["title"])
+
+        expected = "test title"
+        data = interface.get_interface_graph_data(check_bundle, title=expected)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
 
 
 class CollectdDfTestCase(unittest.TestCase):
