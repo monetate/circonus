@@ -249,10 +249,11 @@ class CirconusClient(object):
         check_bundle = r.json()[0]
         return check_bundle
 
-    def create_collectd_cpu_graph(self, target):
+    def create_collectd_cpu_graph(self, target, title=None):
         """Create a CPU graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
+        :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -261,7 +262,7 @@ class CirconusClient(object):
 
         """
         check_bundle = self.get_collectd_check_bundle(target)
-        data = get_cpu_graph_data(check_bundle)
+        data = get_cpu_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
     def create_collectd_memory_graph(self, target):
