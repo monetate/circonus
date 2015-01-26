@@ -1,6 +1,14 @@
 Release History
 ---------------
 
+0.0.17 (2015-01-26)
++++++++++++++++++++
+
+**Improvements**
+
+- Add function for updating the ``status`` of each metric in a list of
+  metrics.
+
 0.0.16 (2015-01-24)
 +++++++++++++++++++
 
