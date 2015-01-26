@@ -683,10 +683,12 @@ class CirconusClientTestCase(unittest.TestCase):
             self.assertEqual(expected, actual)
 
             title = "test title"
-            self.assertIsNotNone(self.c.create_collectd_df_graph(target, "/mnt/mysql", title))
+            mount_dir = "/mnt/mysql"
+            expected = "%s df %s" % (title, mount_dir)
+            self.assertIsNotNone(self.c.create_collectd_df_graph(target, mount_dir, title))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
-            self.assertEqual(title, actual["title"])
+            self.assertEqual(expected, actual["title"])
 
     @responses.activate
     def test_create_collectd_graphs_log_error(self):
@@ -1448,8 +1450,9 @@ class CollectdDfTestCase(unittest.TestCase):
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
 
-        expected = "test title"
-        data = df.get_df_graph_data(check_bundle, mount_dir, expected)
+        title = "test title"
+        expected = "%s df %s" % (title, mount_dir)
+        data = df.get_df_graph_data(check_bundle, mount_dir, title)
         actual = data["title"]
         self.assertEqual(expected, actual)
 
@@ -1485,7 +1488,7 @@ class CollectdGraphTestCase(unittest.TestCase):
                 elif dp["name"].startswith("interface"):
                     self.assertEqual(titles["interface"] + " eth0 bit/s", d["title"])
                 elif df.DF_METRIC_RE.match(dp["name"]):
-                    self.assertEqual(titles["df"], d["title"])
+                    self.assertEqual("%s df root" % titles["df"], d["title"])
 
 
 class GraphTestCase(unittest.TestCase):

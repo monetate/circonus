@@ -101,7 +101,7 @@ def get_df_graph_data(check_bundle, mount_dir, title=None):
     :param str mount_dir: The mount directory to create graph data for.
     :rtype: :py:class:`dict`
 
-    ``title`` defaults to using ``check_bundle["target"]``.
+    ``title`` defaults to using ``check_bundle["target"]``.  ``df`` and ``mount_dir`` will be appended to ``title``.
 
     The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
     <https://login.circonus.com/resources/api/calls/graph>`_.
@@ -112,7 +112,8 @@ def get_df_graph_data(check_bundle, mount_dir, title=None):
     if df_metrics:
         sorted_df_metrics = get_sorted_df_metrics(df_metrics)
         datapoints = get_df_datapoints(check_bundle, sorted_df_metrics)
-        graph_title = title if title else "%s df %s" % (check_bundle["target"], mount_dir)
+        graph_title = title if title else check_bundle["target"]
+        graph_title = "%s df %s" % (graph_title, mount_dir)
         custom_data = {"title": graph_title, "min_left_y": 0, "min_right_y": 0}
         data = get_graph_data(check_bundle, datapoints, custom_data)
     return data
