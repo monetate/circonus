@@ -82,8 +82,8 @@ def log_http_error(f):
             r = f(*args, **kwargs)
             r.raise_for_status()
         except HTTPError as e:
-            log.error("%s: %s (%s)", e.response.status_code, e.response.json()["code"],
-                      e.response.json()["message"])
+            log.error("%s: %s (%s. %s)", e.response.status_code, e.response.json()["code"],
+                      e.response.json()["message"], e.response.json()["explanation"])
             raise
         return r
     return wrapper
