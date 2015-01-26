@@ -337,7 +337,7 @@ class CirconusClientTestCase(unittest.TestCase):
     def test_log_http_error_raises_http_error(self):
         cid = "graph/12345"
         responses.add(responses.GET, get_api_url(cid),
-                      body=json.dumps({"message": "test", "code": "test"}),
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with self.assertRaises(HTTPError):
@@ -356,7 +356,7 @@ class CirconusClientTestCase(unittest.TestCase):
     @responses.activate
     def test_create_annotation(self):
         responses.add(responses.POST, get_api_url(Annotation.RESOURCE_PATH),
-                      body=json.dumps({"message": "test", "code": "test"}), status=403,
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}), status=403,
                       content_type="application/json")
         with self.assertRaises(HTTPError):
             self.c.create_annotation("title", "category")
@@ -620,7 +620,7 @@ class CirconusClientTestCase(unittest.TestCase):
         responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
                       content_type="application/json")
         responses.add(responses.POST, get_api_url("graph"),
-                      body=json.dumps({"message": "test", "code": "test"}),
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with patch("circonus.client.log") as log_patch:
@@ -630,7 +630,7 @@ class CirconusClientTestCase(unittest.TestCase):
     @responses.activate
     def test_get_collectd_check_bundle_raises_http_error(self):
         responses.add(responses.GET, get_api_url("check_bundle"),
-                      body=json.dumps({"message": "test", "code": "test"}),
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with self.assertRaises(HTTPError):
@@ -666,7 +666,7 @@ class CirconusClientTestCase(unittest.TestCase):
     @responses.activate
     def test_create_collectd_graphs_logs_http_error(self):
         responses.add(responses.GET, get_api_url("check_bundle"),
-                      body=json.dumps({"message": "test", "code": "test"}),
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with patch("circonus.client.log") as log_patch:
@@ -703,7 +703,7 @@ class AnnotationTestCase(unittest.TestCase):
         a.start = datetime.utcnow()
         a.stop = a.start + timedelta(seconds=1)
         responses.add(responses.GET, get_api_url(Annotation.RESOURCE_PATH),
-                      body=json.dumps({"message": "test", "code": "test"}),
+                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with self.assertRaises(HTTPError):
