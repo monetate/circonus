@@ -315,12 +315,13 @@ class CirconusClient(object):
         data = get_df_graph_data(check_bundle, mount_dir, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None):
+    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None, titles=None):
         """Create several graphs from a ``collectd`` check bundle.
 
         :param str target: The target of the check bundle to filter for.
         :param list interface_name: (optional) The interface names to create ``interface`` graphs for, e.g., ``["eth0"]``.
         :param list mount_dirs: (optional) The mount directories to create ``df`` graphs for, e.g., ``["/root", "/mnt"]``.
+        :param dict titles: (optional) The titles to use for each graph.
         :rtype: (:py:class:`bool`, :py:class:`list`)
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -334,6 +335,11 @@ class CirconusClient(object):
         ``interface_names`` should be a :py:class:`list` of network interface device names.  ``interface`` graphs will
         be created for each.
 
+        ``titles`` should be a :py:class:`dict` instance mapping a key representing the ``collectd`` plugin name to a
+        title for the graph representing it.  For example::
+
+        >>> {"cpu": "test.example.com CPU", "df": "test.example.com Disk"}
+
         Return :py:const:`True` if all ``collectd`` graphs were created successfully, :py:const:`False` otherwise,
         along with a :py:class:`list` of :class:`requests.Response` instances for requests made.
 
@@ -343,6 +349,9 @@ class CirconusClient(object):
 
         if interface_names is None:
             interface_names = ["eth0"]
+
+        if titles is None:
+            titles = {}
 
         responses = []
         try:

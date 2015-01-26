@@ -1466,6 +1466,24 @@ class CollectdGraphTestCase(unittest.TestCase):
         data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"])
         self.assertIsInstance(data, types.ListType)
         self.assertEqual(4, len(data))
+        for d in data:
+            self.assertIn("title", d)
+
+        titles = {"cpu": "cpu test", "memory": "memory test", "interface": "interface test", "df": "df test"}
+        data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"], titles)
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(4, len(data))
+        for d in data:
+            self.assertIn("title", d)
+            for dp in d["datapoints"]:
+                if cpu.CPU_METRIC_RE.match(dp["name"]):
+                    self.assertEqual(titles["cpu"], d["title"])
+                elif memory.MEMORY_METRIC_RE.match(dp["name"]):
+                    self.assertEqual(titles["memory"], d["title"])
+                elif dp["name"].startswith("interface"):
+                    self.assertEqual(titles["interface"], d["title"])
+                elif df.DF_METRIC_RE.match(dp["name"]):
+                    self.assertEqual(titles["df"], d["title"])
 
 
 class GraphTestCase(unittest.TestCase):
