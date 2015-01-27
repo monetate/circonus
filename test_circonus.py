@@ -484,7 +484,7 @@ class CirconusClientTestCase(unittest.TestCase):
             put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
     @responses.activate
-    def test_create_collectd_cpu_graph(self):
+    def test_create_collectd_cpu_graph_no_metrics(self):
         target = "10.0.0.1"
         check_bundle = {"status": "active",
                         "_last_modified_by": "/user/1234",
@@ -509,6 +509,61 @@ class CirconusClientTestCase(unittest.TestCase):
         with patch("circonus.client.requests.post") as post_patch:
             self.assertIsNone(self.c.create_collectd_cpu_graph(target))
             post_patch.assert_not_called()
+
+    @responses.activate
+    def test_create_collectd_cpu_graph(self):
+        target = "10.0.0.1"
+        cb = {"_checks": ["/check_bundle/12345"],
+              "target": target,
+              "type": "collectd",
+              "metrics": [{'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`idle'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`user'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`steal'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`interrupt'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`idle'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`wait'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`steal'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`nice'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`system'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`softirq'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`nice'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`softirq'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`user'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
+                          {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]}
+        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
+                      content_type="application/json")
+        expected = {"max_left_y": 100,
+                    "datapoints": [{"derive": "counter", "name": "cpu`0`cpu`steal", "color": "#ff0000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`steal"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`interrupt", "color": "#f72100", "legend_formula": None,"check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`interrupt"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`softirq", "color": "#ee3f00", "legend_formula":None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`softirq"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`system", "color": "#e65c00", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`system"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`wait", "color": "#dd7600", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`wait"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`user", "color": "#d58e00", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`user"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`nice", "color": "#cca300", "legend_formula":None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack":0, "metric_name": "cpu`0`cpu`nice"},
+                                   {"derive": "counter", "name": "cpu`0`cpu`idle", "color": "#c4b700", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": True, "axis": "l", "stack": 0,"metric_name": "cpu`0`cpu`idle"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`steal", "color": "#afbb00", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 1,"metric_name": "cpu`1`cpu`steal"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`interrupt", "color": "#8fb300", "legend_formula":None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack":1, "metric_name": "cpu`1`cpu`interrupt"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`softirq", "color": "#72aa00", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 1, "metric_name": "cpu`1`cpu`softirq"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`system", "color": "#56a200", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l","stack": 1, "metric_name": "cpu`1`cpu`system"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`wait", "color": "#3d9900", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l","stack": 1, "metric_name": "cpu`1`cpu`wait"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`user", "color": "#279100", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 1, "metric_name": "cpu`1`cpu`user"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`nice", "color": "#128800", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 1, "metric_name": "cpu`1`cpu`nice"},
+                                   {"derive": "counter", "name": "cpu`1`cpu`idle", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": True, "axis": "l", "stack": 1, "metric_name": "cpu`1`cpu`idle"}],
+                    "tags": ["telemetry:collectd"],
+                    "title": "10.0.0.1 cpu"}
+        with patch("circonus.client.requests.post") as post_patch:
+            self.assertIsNotNone(self.c.create_collectd_cpu_graph(target))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual)
+
+            title = "test title"
+            self.assertIsNotNone(self.c.create_collectd_cpu_graph(target, title))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(title, actual["title"])
 
     @responses.activate
     def test_create_collectd_memory_graph_no_memory_metrics(self):
@@ -562,6 +617,11 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
+            title = "test title"
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(target, title))
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(title, actual["title"])
+
     @responses.activate
     def test_create_collectd_interface_graph(self):
         target = "10.0.0.1"
@@ -586,6 +646,13 @@ class CirconusClientTestCase(unittest.TestCase):
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
+
+            title = "test title"
+            expected = title + " eth0 bit/s"
+            self.assertIsNotNone(self.c.create_collectd_interface_graph(target, title=title))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual["title"])
 
     @responses.activate
     def test_create_collectd_df_graph(self):
@@ -614,6 +681,14 @@ class CirconusClientTestCase(unittest.TestCase):
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
+
+            title = "test title"
+            mount_dir = "/mnt/mysql"
+            expected = "%s df %s" % (title, mount_dir)
+            self.assertIsNotNone(self.c.create_collectd_df_graph(target, mount_dir, title))
+            post_patch.assert_called()
+            actual = json.loads(post_patch.call_args[-1]["data"])
+            self.assertEqual(expected, actual["title"])
 
     @responses.activate
     def test_create_collectd_graphs_log_error(self):
@@ -1149,6 +1224,11 @@ class CollectdCpuTestCase(unittest.TestCase):
         self.assertEqual("%s cpu" % check_bundle["target"], data["title"])
         self.assertEqual(100, data["max_left_y"])
 
+        expected = "test cpu"
+        data = cpu.get_cpu_graph_data(check_bundle, expected)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
+
 
 class CollectdMemoryTestCase(unittest.TestCase):
 
@@ -1179,6 +1259,11 @@ class CollectdMemoryTestCase(unittest.TestCase):
         for dp in data["datapoints"]:
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
+
+        expected = "test title"
+        data = memory.get_memory_graph_data(check_bundle, expected)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
 
 
 class CollectdInterfaceTestCase(unittest.TestCase):
@@ -1250,6 +1335,12 @@ class CollectdInterfaceTestCase(unittest.TestCase):
         self.assertIn("datapoints", data)
         self.assertIn("title", data)
         self.assertEqual("%s interface eth0 bit/s" % check_bundle["target"], data["title"])
+
+        title = "test title"
+        expected = title + " eth0 bit/s"
+        data = interface.get_interface_graph_data(check_bundle, title=title)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
 
 
 class CollectdDfTestCase(unittest.TestCase):
@@ -1359,6 +1450,12 @@ class CollectdDfTestCase(unittest.TestCase):
             self.assertEqual("gauge", dp["derive"])
             self.assertEqual(0, dp["stack"])
 
+        title = "test title"
+        expected = "%s df %s" % (title, mount_dir)
+        data = df.get_df_graph_data(check_bundle, mount_dir, title)
+        actual = data["title"]
+        self.assertEqual(expected, actual)
+
 
 class CollectdGraphTestCase(unittest.TestCase):
 
@@ -1374,6 +1471,24 @@ class CollectdGraphTestCase(unittest.TestCase):
         data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"])
         self.assertIsInstance(data, types.ListType)
         self.assertEqual(4, len(data))
+        for d in data:
+            self.assertIn("title", d)
+
+        titles = {"cpu": "cpu test", "memory": "memory test", "interface": "interface test", "df": "df test"}
+        data = get_collectd_graph_data(check_bundle, ["eth0"], ["root"], titles)
+        self.assertIsInstance(data, types.ListType)
+        self.assertEqual(4, len(data))
+        for d in data:
+            self.assertIn("title", d)
+            for dp in d["datapoints"]:
+                if cpu.CPU_METRIC_RE.match(dp["name"]):
+                    self.assertEqual(titles["cpu"], d["title"])
+                elif memory.MEMORY_METRIC_RE.match(dp["name"]):
+                    self.assertEqual(titles["memory"], d["title"])
+                elif dp["name"].startswith("interface"):
+                    self.assertEqual(titles["interface"] + " eth0 bit/s", d["title"])
+                elif df.DF_METRIC_RE.match(dp["name"]):
+                    self.assertEqual("%s df root" % titles["df"], d["title"])
 
 
 class GraphTestCase(unittest.TestCase):

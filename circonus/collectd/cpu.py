@@ -109,11 +109,14 @@ def get_cpu_datapoints(check_bundle, metrics):
     return datapoints
 
 
-def get_cpu_graph_data(check_bundle):
+def get_cpu_graph_data(check_bundle, title=None):
     """Get graph data for ``check_bundle``.
 
     :param dict check_bundle: The check bundle to create graph data with.
+    :param str title: (optional) The title to use for the graph.
     :rtype: :py:class:`dict`
+
+    ``title`` defaults to using ``check_bundle["target"]``.
 
     The returned data :py:class:`dict` can be used to :meth:`~circonus.CirconusClient.create` a `graph
     <https://login.circonus.com/resources/api/calls/graph>`_.
@@ -124,6 +127,7 @@ def get_cpu_graph_data(check_bundle):
     if metrics:
         stacked_metrics = get_stacked_cpu_metrics(metrics)
         datapoints = get_cpu_datapoints(check_bundle, stacked_metrics)
-        custom_data = {"title": "%s cpu" % check_bundle["target"], "max_left_y": 100}
+        graph_title = title if title else "%s cpu" % check_bundle["target"]
+        custom_data = {"title": graph_title, "max_left_y": 100}
         data = get_graph_data(check_bundle, datapoints, custom_data)
     return data

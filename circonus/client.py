@@ -249,10 +249,11 @@ class CirconusClient(object):
         check_bundle = r.json()[0]
         return check_bundle
 
-    def create_collectd_cpu_graph(self, target):
+    def create_collectd_cpu_graph(self, target, title=None):
         """Create a CPU graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
+        :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -261,13 +262,14 @@ class CirconusClient(object):
 
         """
         check_bundle = self.get_collectd_check_bundle(target)
-        data = get_cpu_graph_data(check_bundle)
+        data = get_cpu_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_memory_graph(self, target):
+    def create_collectd_memory_graph(self, target, title=None):
         """Create a memory graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
+        :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -276,14 +278,15 @@ class CirconusClient(object):
 
         """
         check_bundle = self.get_collectd_check_bundle(target)
-        data = get_memory_graph_data(check_bundle)
+        data = get_memory_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_interface_graph(self, target, interface_name="eth0"):
+    def create_collectd_interface_graph(self, target, interface_name="eth0", title=None):
         """Create an interface graph from a ``collectd`` check bundle for ``target``.
 
         :param str target: The target of the check bundle to filter for.
         :param str interface_name: (optional) The interface name, e.g., "eth0".
+        :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -292,14 +295,15 @@ class CirconusClient(object):
 
         """
         check_bundle = self.get_collectd_check_bundle(target)
-        data = get_interface_graph_data(check_bundle, interface_name)
+        data = get_interface_graph_data(check_bundle, interface_name, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_df_graph(self, target, mount_dir):
+    def create_collectd_df_graph(self, target, mount_dir, title=None):
         """Create a disk free graph from a ``collectd`` check bundle for ``mount_dir`` on ``target``.
 
         :param str target: The target of the check bundle to filter for.
         :param str mount_dir: The mount directory to create the graph for.
+        :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -308,15 +312,16 @@ class CirconusClient(object):
 
         """
         check_bundle = self.get_collectd_check_bundle(target)
-        data = get_df_graph_data(check_bundle, mount_dir)
+        data = get_df_graph_data(check_bundle, mount_dir, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None):
+    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None, titles=None):
         """Create several graphs from a ``collectd`` check bundle.
 
         :param str target: The target of the check bundle to filter for.
         :param list interface_name: (optional) The interface names to create ``interface`` graphs for, e.g., ``["eth0"]``.
         :param list mount_dirs: (optional) The mount directories to create ``df`` graphs for, e.g., ``["/root", "/mnt"]``.
+        :param dict titles: (optional) The titles to use for each graph.
         :rtype: (:py:class:`bool`, :py:class:`list`)
 
         ``target`` is used to filter ``collectd`` check bundles.
@@ -330,6 +335,11 @@ class CirconusClient(object):
         ``interface_names`` should be a :py:class:`list` of network interface device names.  ``interface`` graphs will
         be created for each.
 
+        ``titles`` should be a :py:class:`dict` instance mapping a key representing the ``collectd`` plugin name to a
+        title for the graph representing it.  For example::
+
+        >>> {"cpu": "test.example.com CPU", "df": "test.example.com Disk"}
+
         Return :py:const:`True` if all ``collectd`` graphs were created successfully, :py:const:`False` otherwise,
         along with a :py:class:`list` of :class:`requests.Response` instances for requests made.
 
@@ -339,6 +349,9 @@ class CirconusClient(object):
 
         if interface_names is None:
             interface_names = ["eth0"]
+
+        if titles is None:
+            titles = {}
 
         responses = []
         try:
