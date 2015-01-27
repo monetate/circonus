@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.18 (2015-01-26)
++++++++++++++++++++
+
+**Improvements**
+
+- Add optional custom titles for all ``collectd`` graphs.
+
 0.0.17 (2015-01-26)
 +++++++++++++++++++
 
