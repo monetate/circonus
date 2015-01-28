@@ -112,8 +112,8 @@ def get_df_graph_data(check_bundle, mount_dir, title=None):
     if df_metrics:
         sorted_df_metrics = get_sorted_df_metrics(df_metrics)
         datapoints = get_df_datapoints(check_bundle, sorted_df_metrics)
-        graph_title = title if title else check_bundle["target"]
-        graph_title = "%s df %s" % (graph_title, mount_dir)
+        graph_title = title if title else "%s df" % check_bundle["target"]
+        graph_title = "%s %s" % (graph_title, mount_dir)
         custom_data = {"title": graph_title, "min_left_y": 0, "min_right_y": 0}
         data = get_graph_data(check_bundle, datapoints, custom_data)
     return data
