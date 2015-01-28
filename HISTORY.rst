@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+0.0.20 (2015-01-28)
++++++++++++++++++++
+
+**Bug fixes**
+
+- Remove errant ``df`` from custom graph title.
+
 0.0.19 (2015-01-28)
 +++++++++++++++++++
 

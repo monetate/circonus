@@ -1,5 +1,5 @@
 __title__ = "circonus"
-__version__ = "0.0.19"
+__version__ = "0.0.20"
 
 from logging import NullHandler
 
