@@ -356,7 +356,7 @@ class CirconusClient(object):
         responses = []
         try:
             check_bundle = self.get_collectd_check_bundle(target)
-            graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs)
+            graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs, titles=titles)
             for d in graph_data:
                 responses.append(self.create("graph", d))
         except HTTPError as e:
