@@ -262,19 +262,18 @@ class CirconusClient(object):
         data = get_cpu_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_memory_graph(self, target, title=None):
-        """Create a memory graph from a ``collectd`` check bundle for ``target``.
+    def create_collectd_memory_graph(self, check_bundle, title=None):
+        """Create a memory graph from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
         ``target`` is used to filter ``collectd`` check bundles.
 
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_memory_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 

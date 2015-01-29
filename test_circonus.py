@@ -559,33 +559,26 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(title, actual["title"])
 
-    @responses.activate
     def test_create_collectd_memory_graph_no_memory_metrics(self):
         target = "10.0.0.1"
         cb = {"target": target, "type": "collectd"}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNone(self.c.create_collectd_memory_graph(target))
+            self.assertIsNone(self.c.create_collectd_memory_graph(cb))
             post_patch.assert_not_called()
 
-    @responses.activate
     def test_create_collectd_memory_graph_too_few_metrics(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
               "target": target,
               "type": "collectd",
               "metrics": [{"status": "active", "type": "numeric", "name": "memory`memory`cached"}]}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         expected = {"min_left_y": 0, "datapoints": [], "tags": ["telemetry:collectd"], "min_right_y": 0, "title": "10.0.0.1 memory"}
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNotNone(self.c.create_collectd_memory_graph(target))
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(cb))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
-    @responses.activate
     def test_create_collectd_memory_graph(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
@@ -595,8 +588,6 @@ class CirconusClientTestCase(unittest.TestCase):
                           {"status": "active", "type": "numeric", "name": "memory`memory`free"},
                           {"status": "active", "type": "numeric", "name": "memory`memory`used"},
                           {"status": "active", "type": "numeric", "name": "memory`memory`buffered"}]}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         expected = {"min_left_y": 0,
                     "datapoints": [{"color": "#ff0000", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name": "memory`memory`used", "data_formula": None, "metric_name": "memory`memory`used", "check_id": 12345, "hidden": False, "axis": "l"},
                                    {"color": "#d58e00", "legend_formula": None, "derive": "gauge", "metric_type": "numeric", "alpha": None, "stack": 0, "name": "memory`memory`buffered", "data_formula": None,"metric_name": "memory`memory`buffered", "check_id": 12345, "hidden": False, "axis": "l"},
@@ -606,13 +597,13 @@ class CirconusClientTestCase(unittest.TestCase):
                     "min_right_y": 0,
                     "title": "10.0.0.1 memory"}
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNotNone(self.c.create_collectd_memory_graph(target))
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(cb))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
             title = "test title"
-            self.assertIsNotNone(self.c.create_collectd_memory_graph(target, title))
+            self.assertIsNotNone(self.c.create_collectd_memory_graph(cb, title))
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(title, actual["title"])
 
