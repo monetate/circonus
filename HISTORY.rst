@@ -1,6 +1,18 @@
 Release History
 ---------------
 
+0.0.21 (2015-01-29)
++++++++++++++++++++
+
+**Improvements**
+
+- Change the ``collectd`` client interface to take an explicit check bundle to
+  create graphs from rather than naïvely using the *first* ``collectd`` check
+  bundle found for ``target``.
+
+- Refactor the ``datetime_to_int`` method from ``Annotation`` to be a function
+  in ``util``.
+
 0.0.20 (2015-01-28)
 +++++++++++++++++++
 
