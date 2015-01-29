@@ -636,7 +636,6 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual["title"])
 
-    @responses.activate
     def test_create_collectd_df_graph(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
@@ -649,8 +648,6 @@ class CirconusClientTestCase(unittest.TestCase):
                           {"name": "df`mnt-solr-home`df_complex`reserved", "status": "active", "type": "numeric"},
                           {"name": "df`mnt-solr-home`df_complex`used", "status": "active", "type": "numeric"},
                           {"name": "df`mnt`df_complex`free", "status": "active", "type": "numeric"}]}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         expected = {"min_right_y": 0,
                     "title": "10.0.0.1 df /mnt/mysql",
                     "min_left_y": 0,
@@ -659,7 +656,7 @@ class CirconusClientTestCase(unittest.TestCase):
                                    {"derive": "gauge", "name": "df`mnt-mysql`df_complex`used", "color": "#bfbf00", "legend_formula":None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis":"l", "stack": 0, "metric_name": "df`mnt-mysql`df_complex`used"},
                                    {"derive": "gauge", "name": "df`mnt-mysql`df_complex`free", "color": "#008000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "df`mnt-mysql`df_complex`free"}]}
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNotNone(self.c.create_collectd_df_graph(target, "/mnt/mysql"))
+            self.assertIsNotNone(self.c.create_collectd_df_graph(cb, "/mnt/mysql"))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
@@ -667,7 +664,7 @@ class CirconusClientTestCase(unittest.TestCase):
             title = "test title"
             mount_dir = "/mnt/mysql"
             expected = "%s %s" % (title, mount_dir)
-            self.assertIsNotNone(self.c.create_collectd_df_graph(target, mount_dir, title))
+            self.assertIsNotNone(self.c.create_collectd_df_graph(cb, mount_dir, title))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual["title"])

@@ -289,20 +289,17 @@ class CirconusClient(object):
         data = get_interface_graph_data(check_bundle, interface_name, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_df_graph(self, target, mount_dir, title=None):
-        """Create a disk free graph from a ``collectd`` check bundle for ``mount_dir`` on ``target``.
+    def create_collectd_df_graph(self, check_bundle, mount_dir, title=None):
+        """Create a disk free graph from the ``collectd`` ``check_bundle`` for ``mount_dir`` on ``target``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str mount_dir: The mount directory to create the graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_df_graph_data(check_bundle, mount_dir, title)
         return self.create("graph", data) if data else None
 
