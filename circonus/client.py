@@ -269,8 +269,6 @@ class CirconusClient(object):
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
         :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
