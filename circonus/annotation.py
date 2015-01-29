@@ -5,9 +5,10 @@ circonus.annotation
 
 """
 
-from calendar import timegm
 from datetime import datetime
 from functools import wraps
+
+from circonus.util import datetime_to_int
 
 
 class Annotation(object):
@@ -27,20 +28,6 @@ class Annotation(object):
     """
 
     RESOURCE_PATH = "annotation"
-
-    @staticmethod
-    def datetime_to_int(dt):
-        """Convert date and time to seconds since the epoch.
-
-        :param datetime.datetime dt: The date and time to convert.
-        :rtype: :py:class:`int`
-
-        ``dt`` is expected to have been created for the UTC date and time, e.g., with
-        :py:meth:`datetime.datetime.utcnow`.  It is converted to seconds since the epoch with
-        :py:func:`calendar.timegm` to respect UTC.
-
-        """
-        return int(timegm(dt.timetuple()))
 
     def __init__(self, client, title, category, description="", rel_metrics=None):
         self.client = client
@@ -78,8 +65,8 @@ class Annotation(object):
         data = {
             "title": self.title,
             "category": self.category,
-            "start": self.datetime_to_int(self.start),
-            "stop": self.datetime_to_int(self.stop),
+            "start": datetime_to_int(self.start),
+            "stop": datetime_to_int(self.stop),
             "description": self.description,
             "rel_metrics": self.rel_metrics
         }

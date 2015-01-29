@@ -755,8 +755,8 @@ class AnnotationTestCase(unittest.TestCase):
             expected_data = {
                 "title": a.title,
                 "category": a.category,
-                "start": a.datetime_to_int(a.start),
-                "stop": a.datetime_to_int(a.stop),
+                "start": util.datetime_to_int(a.start),
+                "stop": util.datetime_to_int(a.stop),
                 "description": a.description,
                 "rel_metrics": a.rel_metrics
             }
