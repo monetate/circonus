@@ -8,9 +8,24 @@ Utility functions that other modules depend upon.
 """
 
 
+from calendar import timegm
 from posixpath import sep as pathsep
 
 from colour import Color
+
+
+def datetime_to_int(dt):
+    """Convert date and time to seconds since the epoch.
+
+    :param datetime.datetime dt: The date and time to convert.
+    :rtype: :py:class:`int`
+
+    ``dt`` is expected to have been created for the UTC date and time, e.g., with
+    :py:meth:`datetime.datetime.utcnow`.  It is converted to seconds since the epoch with
+    :py:func:`calendar.timegm` to respect UTC.
+
+    """
+    return int(timegm(dt.timetuple()))
 
 
 def get_check_id_from_cid(cid):

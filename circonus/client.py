@@ -235,99 +235,68 @@ class CirconusClient(object):
         a.create()
         return a
 
-    def get_collectd_check_bundle(self, target):
-        """Get a ``collectd`` check bundle for ``target``.
+    def create_collectd_cpu_graph(self, check_bundle, title=None):
+        """Create a CPU graph from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target to filter the check bundle.
-        :rtype: :py:class:`dict`
-
-        The *first* ``collectd`` check bundle for ``target`` will be returned.  A given ``target`` should not have
-        more than one ``collectd`` check bundle at any given moment.
-
-        """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        check_bundle = r.json()[0]
-        return check_bundle
-
-    def create_collectd_cpu_graph(self, target, title=None):
-        """Create a CPU graph from a ``collectd`` check bundle for ``target``.
-
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_cpu_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_memory_graph(self, target, title=None):
-        """Create a memory graph from a ``collectd`` check bundle for ``target``.
+    def create_collectd_memory_graph(self, check_bundle, title=None):
+        """Create a memory graph from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_memory_graph_data(check_bundle, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_interface_graph(self, target, interface_name="eth0", title=None):
-        """Create an interface graph from a ``collectd`` check bundle for ``target``.
+    def create_collectd_interface_graph(self, check_bundle, interface_name="eth0", title=None):
+        """Create an interface graph from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str interface_name: (optional) The interface name, e.g., "eth0".
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_interface_graph_data(check_bundle, interface_name, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_df_graph(self, target, mount_dir, title=None):
-        """Create a disk free graph from a ``collectd`` check bundle for ``mount_dir`` on ``target``.
+    def create_collectd_df_graph(self, check_bundle, mount_dir, title=None):
+        """Create a disk free graph from the ``collectd`` ``check_bundle`` for ``mount_dir`` on ``target``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str mount_dir: The mount directory to create the graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        :py:const:`None` is returned if no data to create the graph could be found for ``target``.
+        :py:const:`None` is returned if no data to create the graph could be found in ``check_bundle``.
 
         """
-        check_bundle = self.get_collectd_check_bundle(target)
         data = get_df_graph_data(check_bundle, mount_dir, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None, titles=None):
-        """Create several graphs from a ``collectd`` check bundle.
+    def create_collectd_graphs(self, check_bundle, interface_names=None, mount_dirs=None, titles=None):
+        """Create several graphs from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create graphs for.
         :param list interface_name: (optional) The interface names to create ``interface`` graphs for, e.g., ``["eth0"]``.
         :param list mount_dirs: (optional) The mount directories to create ``df`` graphs for, e.g., ``["/root", "/mnt"]``.
         :param dict titles: (optional) The titles to use for each graph.
         :rtype: (:py:class:`bool`, :py:class:`list`)
-
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        Only the first ``collectd`` check bundle will be used as no ``target`` should have more than a single
-        ``collectd`` check bundle at once.
 
         ``mount_dirs`` should be a :py:class:`list` of directories where devices are mounted.  ``df`` graphs will be
         created for each.
@@ -355,7 +324,6 @@ class CirconusClient(object):
 
         responses = []
         try:
-            check_bundle = self.get_collectd_check_bundle(target)
             graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs, titles=titles)
             for d in graph_data:
                 responses.append(self.create("graph", d))
