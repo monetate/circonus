@@ -235,7 +235,6 @@ class CirconusClient(object):
         a.create()
         return a
 
-
     def create_collectd_cpu_graph(self, check_bundle, title=None):
         """Create a CPU graph from the ``collectd`` ``check_bundle``.
 
