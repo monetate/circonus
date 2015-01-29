@@ -252,7 +252,7 @@ class CirconusClient(object):
     def create_collectd_cpu_graph(self, check_bundle, title=None):
         """Create a CPU graph from the ``collectd`` ``check_bundle``.
 
-        :param dict target: The check bundle to create a graph for.
+        :param dict check_bundle: The check bundle to create a graph for.
         :param str title: (optional) The title to use for the graph.
         :rtype: :class:`requests.Response` or :py:const:`None`
 
