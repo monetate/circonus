@@ -483,7 +483,6 @@ class CirconusClientTestCase(unittest.TestCase):
             data = json.dumps({"tags": tag.get_tags_with(check_bundle, new_tags)})
             put_patch.assert_called_with(get_api_url(cid), headers=self.c.api_headers, data=data)
 
-    @responses.activate
     def test_create_collectd_cpu_graph_no_metrics(self):
         target = "10.0.0.1"
         check_bundle = {"status": "active",
@@ -504,13 +503,10 @@ class CirconusClientTestCase(unittest.TestCase):
                                    "security_level": "0"},
                         "_last_modified": 1416618604}
         data = {}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
-                      content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNone(self.c.create_collectd_cpu_graph(target))
+            self.assertIsNone(self.c.create_collectd_cpu_graph(check_bundle))
             post_patch.assert_not_called()
 
-    @responses.activate
     def test_create_collectd_cpu_graph(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
@@ -532,8 +528,6 @@ class CirconusClientTestCase(unittest.TestCase):
                           {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`system'},
                           {'status': 'active', 'type': 'numeric', 'name': 'cpu`1`cpu`wait'},
                           {'status': 'active', 'type': 'numeric', 'name': 'cpu`0`cpu`interrupt'}]}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         expected = {"max_left_y": 100,
                     "datapoints": [{"derive": "counter", "name": "cpu`0`cpu`steal", "color": "#ff0000", "legend_formula": None, "check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`steal"},
                                    {"derive": "counter", "name": "cpu`0`cpu`interrupt", "color": "#f72100", "legend_formula": None,"check_id": 12345, "data_formula": None, "metric_type": "numeric", "alpha": None, "hidden": False, "axis": "l", "stack": 0, "metric_name": "cpu`0`cpu`interrupt"},
@@ -554,13 +548,13 @@ class CirconusClientTestCase(unittest.TestCase):
                     "tags": ["telemetry:collectd"],
                     "title": "10.0.0.1 cpu"}
         with patch("circonus.client.requests.post") as post_patch:
-            self.assertIsNotNone(self.c.create_collectd_cpu_graph(target))
+            self.assertIsNotNone(self.c.create_collectd_cpu_graph(cb))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual)
 
             title = "test title"
-            self.assertIsNotNone(self.c.create_collectd_cpu_graph(target, title))
+            self.assertIsNotNone(self.c.create_collectd_cpu_graph(cb, title))
             post_patch.assert_called()
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(title, actual["title"])
