@@ -303,19 +303,14 @@ class CirconusClient(object):
         data = get_df_graph_data(check_bundle, mount_dir, title)
         return self.create("graph", data) if data else None
 
-    def create_collectd_graphs(self, target, interface_names=None, mount_dirs=None, titles=None):
-        """Create several graphs from a ``collectd`` check bundle.
+    def create_collectd_graphs(self, check_bundle, interface_names=None, mount_dirs=None, titles=None):
+        """Create several graphs from the ``collectd`` ``check_bundle``.
 
-        :param str target: The target of the check bundle to filter for.
+        :param dict check_bundle: The check bundle to create graphs for.
         :param list interface_name: (optional) The interface names to create ``interface`` graphs for, e.g., ``["eth0"]``.
         :param list mount_dirs: (optional) The mount directories to create ``df`` graphs for, e.g., ``["/root", "/mnt"]``.
         :param dict titles: (optional) The titles to use for each graph.
         :rtype: (:py:class:`bool`, :py:class:`list`)
-
-        ``target`` is used to filter ``collectd`` check bundles.
-
-        Only the first ``collectd`` check bundle will be used as no ``target`` should have more than a single
-        ``collectd`` check bundle at once.
 
         ``mount_dirs`` should be a :py:class:`list` of directories where devices are mounted.  ``df`` graphs will be
         created for each.
@@ -343,7 +338,6 @@ class CirconusClient(object):
 
         responses = []
         try:
-            check_bundle = self.get_collectd_check_bundle(target)
             graph_data = get_collectd_graph_data(check_bundle, interface_names, mount_dirs, titles=titles)
             for d in graph_data:
                 responses.append(self.create("graph", d))

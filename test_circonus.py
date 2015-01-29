@@ -669,17 +669,14 @@ class CirconusClientTestCase(unittest.TestCase):
             actual = json.loads(post_patch.call_args[-1]["data"])
             self.assertEqual(expected, actual["title"])
 
-    @responses.activate
     def test_create_collectd_graphs_log_error(self):
         target = "10.0.0.1"
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
-                      content_type="application/json")
         responses.add(responses.POST, get_api_url("graph"),
                       body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
                       status=500,
                       content_type="application/json")
         with patch("circonus.client.log") as log_patch:
-            self.c.create_collectd_graphs(target)
+            self.c.create_collectd_graphs(check_bundle)
             self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
 
     @responses.activate
@@ -699,19 +696,16 @@ class CirconusClientTestCase(unittest.TestCase):
         cb = self.c.get_collectd_check_bundle(target)
         self.assertIsInstance(cb, types.DictType)
 
-    @responses.activate
     def test_create_collectd_graphs_no_metrics(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
               "target": target,
               "type": "collectd",
               "metrics": []}
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([cb]), status=200,
-                      content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
             post_patch.return_value = response_mock = MagicMock()
             response_mock.status_code = 200
-            success, rs = self.c.create_collectd_graphs(target)
+            success, rs = self.c.create_collectd_graphs(cb)
             post_patch.assert_called()
             self.assertTrue(success)
             self.assertIsInstance(rs, types.ListType)
@@ -725,20 +719,17 @@ class CirconusClientTestCase(unittest.TestCase):
                       status=500,
                       content_type="application/json")
         with patch("circonus.client.log") as log_patch:
-            success, rs = self.c.create_collectd_graphs("10.0.0.1")
+            success, rs = self.c.create_collectd_graphs(check_bundle)
             self.assertFalse(success)
             self.assertEqual([], rs)
             self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
 
-    @responses.activate
     def test_create_collectd_graphs(self):
         target = "10.0.0.1"
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
-                      content_type="application/json")
         with patch("circonus.client.requests.post") as post_patch:
             post_patch.return_value = response_mock = MagicMock()
             response_mock.status_code = 200
-            success, rs = self.c.create_collectd_graphs(target)
+            success, rs = self.c.create_collectd_graphs(check_bundle)
             post_patch.assert_called()
             self.assertTrue(success)
             self.assertEqual(4, len(rs))
