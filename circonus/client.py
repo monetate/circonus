@@ -235,19 +235,6 @@ class CirconusClient(object):
         a.create()
         return a
 
-    def get_collectd_check_bundle(self, target):
-        """Get a ``collectd`` check bundle for ``target``.
-
-        :param str target: The target to filter the check bundle.
-        :rtype: :py:class:`dict`
-
-        The *first* ``collectd`` check bundle for ``target`` will be returned.  A given ``target`` should not have
-        more than one ``collectd`` check bundle at any given moment.
-
-        """
-        r = self.get("check_bundle", {"f_target": target, "f_type": "collectd"})
-        check_bundle = r.json()[0]
-        return check_bundle
 
     def create_collectd_cpu_graph(self, check_bundle, title=None):
         """Create a CPU graph from the ``collectd`` ``check_bundle``.

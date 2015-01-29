@@ -679,23 +679,6 @@ class CirconusClientTestCase(unittest.TestCase):
             self.c.create_collectd_graphs(check_bundle)
             self.assertEqual("collectd graphs could not be created: %s", log_patch.error.call_args[0][0])
 
-    @responses.activate
-    def test_get_collectd_check_bundle_raises_http_error(self):
-        responses.add(responses.GET, get_api_url("check_bundle"),
-                      body=json.dumps({"message": "test", "code": "test", "explanation": "test"}),
-                      status=500,
-                      content_type="application/json")
-        with self.assertRaises(HTTPError):
-            self.c.get_collectd_check_bundle("10.0.0.1")
-
-    @responses.activate
-    def test_get_collectd_check_bundle(self):
-        target = "10.0.0.1"
-        responses.add(responses.GET, get_api_url("check_bundle"), body=json.dumps([check_bundle]), status=200,
-                      content_type="application/json")
-        cb = self.c.get_collectd_check_bundle(target)
-        self.assertIsInstance(cb, types.DictType)
-
     def test_create_collectd_graphs_no_metrics(self):
         target = "10.0.0.1"
         cb = {"_checks": ["/check_bundle/12345"],
