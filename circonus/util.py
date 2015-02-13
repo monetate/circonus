@@ -1,6 +1,6 @@
 """
 
-cicronus.util
+circonus.util
 ~~~~~~~~~~~~~
 
 Utility functions that other modules depend upon.
