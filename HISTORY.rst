@@ -1,6 +1,14 @@
 Release History
 ---------------
 
+0.0.22 (2015-02-14)
++++++++++++++++++++
+
+**Bug fixes**
+
+- Avoid selecting ``df`` metrics other than ``df_complex`` when creating disk
+  free graphs.
+
 0.0.21 (2015-01-29)
 +++++++++++++++++++
 
