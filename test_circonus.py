@@ -58,6 +58,15 @@ check_bundle = {"_checks": ["/check/123456"],
                             {"name": "df`mnt-mysql`df_complex`reserved",
                              "status": "active",
                              "type": "numeric"},
+                            {"name": "df`mnt-mysql`percent_bytes`used",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-mysql`percent_bytes`free",
+                             "status": "active",
+                             "type": "numeric"},
+                            {"name": "df`mnt-mysql`percent_bytes`reserved",
+                             "status": "active",
+                             "type": "numeric"},
                             {"name": "df`mnt-solr-home`df_complex`free",
                              "status": "active",
                              "type": "numeric"},
@@ -1340,8 +1349,9 @@ class CollectdDfTestCase(unittest.TestCase):
         self.assertItemsEqual(expected, actual)
 
         expected = [m for m in check_bundle["metrics"] if m["name"].startswith("df`")]
-        expected = [m for m in expected if "`mnt-mysql`" in m["name"]]
+        expected = [m for m in expected if "`mnt-mysql`" in m["name"] and "`df_complex" in m["name"]]
         actual = df.get_df_metrics(check_bundle["metrics"], "mnt/mysql")
+        self.assertEqual(3, len(actual))
         self.assertItemsEqual(expected, actual)
         actual = df.get_df_metrics(check_bundle["metrics"], "/mnt/mysql")
         self.assertItemsEqual(expected, actual)

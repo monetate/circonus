@@ -28,8 +28,9 @@ This list is used to filter and sort metrics in preparation for creating a graph
 
 DF_METRIC_RE = re.compile(r"""
 ^df                             # Starts with "df"
-`.*`                            # Anything in between
-({}|{}|{})$                     # Ends with defined suffix
+`.*                             # Has a mount directory
+`df_complex                     # Is a complex metric
+`({}|{}|{})$                    # Ends with defined suffix
 """.format(*DF_METRIC_SUFFIXES), re.X)
 """A compiled regular expression which matches ``collectd`` metrics."""
 
